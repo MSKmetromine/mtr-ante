@@ -32,6 +32,7 @@ configure(subprojects) {
 
 	configurations {
 		shadowCommon
+        runtime
 	}
 
 	dependencies {
@@ -47,10 +48,14 @@ configure(subprojects) {
 		implementation files("../checkouts/${minecraft_version}/mtr-common.jar")
 		implementation "org.msgpack:msgpack-core:${rootProject.messagepack_version}"
 
-		compileOnly("org.graalvm.polyglot:polyglot:${graaljsVersion}")
-		compileOnly("org.graalvm.polyglot:js:${graaljsVersion}")
-		compileOnly("org.graalvm.truffle:truffle-api:${graaljsVersion}")
-		compileOnly("org.graalvm.truffle:truffle-runtime:${graaljsVersion}")
+        compileOnly("org.graalvm.polyglot:polyglot:${graaljsVersion}")
+        compileOnly("org.graalvm.polyglot:js:${graaljsVersion}")
+        compileOnly("org.graalvm.truffle:truffle-api:${graaljsVersion}")
+        compileOnly("org.graalvm.truffle:truffle-runtime:${graaljsVersion}")
+
+        implementation("org.graalvm.polyglot:polyglot:${graaljsVersion}")
+        implementation("org.graalvm.js:js-community:${graaljsVersion}")
+        implementation("org.graalvm.truffle:truffle-enterprise:${graaljsVersion}")
 
 		if (name == "fabric") {
 			if (!project.hasProperty('excludeGraal') || !project.property('excludeGraal').toBoolean()) {
@@ -160,7 +165,7 @@ configure(allprojects) {
 		maven { url = "https://maven.parchmentmc.org/" }
 		maven { url "https://maven.shedaniel.me"}
 		maven { url "https://repo1.maven.org/maven2/" }
-		maven { url "https://nexus.velocitypowered.com/repository/maven-public/" }
+		//maven { url "https://nexus.velocitypowered.com/repository/maven-public/" }
 	}
 
 	tasks.withType(JavaCompile) {

@@ -70,16 +70,18 @@ shadowJar {
 	relocate 'de.javagl', 'vendor.cn.zbx1425.sowcerext.de.javagl'
 	relocate 'com.github.stuxuhai', 'vendor.cn.zbx1425.mtrsteamloco.com.github.stuxuhai'
 
-	from project.configurations.clothConfigJar.files.collect {
-		return zipTree(it).matching { filter ->
-			filter.include { e ->
-				matchInnerClass e.path as String,
-						"me/shedaniel/clothconfig2",
-						"me/shedaniel/math",
-						"assets/cloth-config2"
-			}
-		}
-	}
+	from {
+        project.configurations.clothConfigJar.files.collect {
+            return zipTree(it).matching { filter ->
+                filter.include { e ->
+                    matchInnerClass e.path as String,
+                            "me/shedaniel/clothconfig2",
+                            "me/shedaniel/math",
+                            "assets/cloth-config2"
+                }
+            }
+        }
+    }
 
 	relocate "me.shedaniel", "cn.zbx1425.mtrsteamloco.vendor.me.shedaniel"
 

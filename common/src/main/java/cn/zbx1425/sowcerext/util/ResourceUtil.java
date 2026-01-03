@@ -29,7 +29,9 @@ public class ResourceUtil {
     }
 
     public static ResourceLocation resolveRelativePath(ResourceLocation baseFile, String relative, String expectExtension) {
-        relative = relative.toLowerCase(Locale.ROOT).replace('\\', '/');
+        relative = relative.toLowerCase(Locale.ROOT)
+                .replace('\\', '/')
+                .replaceAll("/+", "/");
 
         if (relative.contains(":")) {
             relative = relative.replaceAll("[^a-z0-9/.:_-]", "_");

@@ -100,13 +100,7 @@ public abstract class ScriptHolderBase {
                 }
                 return false;
             })
-            .allowIO(IOAccess.newBuilder().fileSystem(FileSystem.newCompositeFileSystem(defFileSystem, Selector.of(defFileSystem, path -> {
-                if (path.isAbsolute()) {
-                    return path.normalize().startsWith(basicFolder);
-                } else {
-                    return basicFolder.resolve(path).normalize().startsWith(basicFolder);
-                }
-            }))).build())  
+            .allowIO(IOAccess.newBuilder().fileSystem(defFileSystem).build())
             .allowEnvironmentAccess(EnvironmentAccess.INHERIT)  
             .allowExperimentalOptions(true)  
             .allowInnerContextOptions(true)  
@@ -343,8 +337,9 @@ public abstract class ScriptHolderBase {
         eval(PRETREATMENT);
         inject("SIDE", side);
         String configInfo = new GsonBuilder().disableHtmlEscaping().create().toJson(config);
-        configInfo = configInfo.replace("\"", "\\\"");
-        eval("CONFIG_INFO = JSON.parse(`" + configInfo + "`);");
+//        configInfo = configInfo.replace("\"", "\\\"").replace("\n", "\\n");
+//        eval("CONFIG_INFO = JSON.parse(`" + configInfo + "`);");
+        eval("CONFIG_INFO = " + configInfo + ";");
         inject("MOD_ENV", Main.class.getPackageName().split("\\.")[0]);
 
         inject(ScriptResourceUtil.class, "includeScript", "include");

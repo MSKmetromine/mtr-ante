@@ -57,19 +57,6 @@ public final class ConfigScreen {
         );
         common.addEntry(entryBuilder
                 .startBooleanToggle(
-                        Text.translatable("gui.mtrsteamloco.config.client.rail_deform"),
-                        ClientConfig.enableRailDeform
-                ).setSaveConsumer(checked -> {
-                    boolean needReload = ClientConfig.enableRailDeform != checked;
-                    ClientConfig.enableRailDeform = checked;
-                    if (ClientConfig.enableRail3D && needReload) {
-                        Minecraft.getInstance().levelRenderer.allChanged();
-                    }
-                }).setDefaultValue(true)
-                .setTooltip(Text.translatable("gui.mtrsteamloco.config.client.rail_deform.description")).build()
-        );
-        common.addEntry(entryBuilder
-                .startBooleanToggle(
                         Text.translatable("gui.mtrsteamloco.config.client.preloadbbmodel"),
                         ClientConfig.enableBbModelPreload
                 ).setSaveConsumer(checked -> {

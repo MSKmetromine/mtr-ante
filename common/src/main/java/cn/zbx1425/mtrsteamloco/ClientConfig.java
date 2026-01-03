@@ -33,7 +33,6 @@ public class ClientConfig {
 
     public static boolean enableScriptDebugOverlay = false;
 
-    public static boolean enableRailDeform = true;
     public static boolean enableRail3D = true;
     public static boolean enableRailRender = true;
     public static boolean enableTrainRender = true;
@@ -65,7 +64,6 @@ public class ClientConfig {
             enableBbModelPreload = getOrDefault(configObject, "enableBbModelPreload", JsonElement::getAsBoolean, false);
             translucentSort = getOrDefault(configObject, "translucentSort", JsonElement::getAsBoolean, false);
             enableScriptDebugOverlay = getOrDefault(configObject, "enableScriptDebugOverlay", JsonElement::getAsBoolean, false);
-            enableRailDeform = getOrDefault(configObject, "enableRailDeform", JsonElement::getAsBoolean, true);
             enableRail3D = getOrDefault(configObject, "enableRail3D", JsonElement::getAsBoolean, true);
             enableRailRender = getOrDefault(configObject, "enableRailRender", JsonElement::getAsBoolean, true);
             enableTrainRender = getOrDefault(configObject, "enableTrainRender", JsonElement::getAsBoolean, true);
@@ -118,7 +116,7 @@ public class ClientConfig {
             return enableRailRender ? 1 : 0;
         } else {
             return enableRailRender
-                    ? (enableRail3D ? (ShadersModHandler.canInstance() && !enableRailDeform ? 3 : 2) : 1)
+                    ? (enableRail3D ? (ShadersModHandler.canInstance() ? 3 : 2) : 1)
                     : 0;
         }
     }
@@ -135,7 +133,6 @@ public class ClientConfig {
             configObject.addProperty("enableBbModelPreload", enableBbModelPreload);
             configObject.addProperty("translucentSort", translucentSort);
             configObject.addProperty("enableScriptDebugOverlay", enableScriptDebugOverlay);
-            configObject.addProperty("enableRailDeform", enableRailDeform);
             configObject.addProperty("enableRail3D", enableRail3D);
             configObject.addProperty("enableRailRender", enableRailRender);
             configObject.addProperty("enableTrainRender", enableTrainRender);

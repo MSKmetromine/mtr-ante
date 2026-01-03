@@ -29,12 +29,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import cn.zbx1425.mtrsteamloco.data.RailModelProperties;
 import cn.zbx1425.mtrsteamloco.gui.DirectNodeScreen;
 import cn.zbx1425.mtrsteamloco.Main;
-import cn.zbx1425.mtrsteamloco.render.RenderUtil;
 
 import java.util.*;
 
@@ -82,9 +80,7 @@ public class RailRenderDispatcher {
         HashMap<Long, RailChunkBase> chunkMap = railChunkMap.get(bakedRail.modelKey);
         if (chunkMap == null) return;
         for (long chunkId : bakedRail.coveredChunks.keySet()) {
-            RailChunkBase chunk = chunkMap.get(chunkId);
-            if (chunk == null) continue;
-            chunk.removeRail(bakedRail);
+            chunkMap.get(chunkId).removeRail(bakedRail);
         }
         bakedRail.dispose();
     }
@@ -132,8 +128,8 @@ public class RailRenderDispatcher {
         if (!isPreviewingModel) {
             isHoldingRailItem = RenderTrains.isHoldingRailRelated(Minecraft.getInstance().player);
             isHoldingBrush = Utilities.isHolding(Minecraft.getInstance().player, (item) -> item.equals(mtr.Items.BRUSH.get())) ||
-                Utilities.isHolding(Minecraft.getInstance().player, (item) -> item.equals(Main.COMPOUND_CREATOR.get())) ||
-                Utilities.isHolding(Minecraft.getInstance().player, (item) -> item.equals(Main.DISPLACEMENT_TOOL.get())) || Utilities.isHolding(Minecraft.getInstance().player, (item) -> item.equals(Main.RAIL_PATH_EDITOR.get()));
+                    Utilities.isHolding(Minecraft.getInstance().player, (item) -> item.equals(Main.COMPOUND_CREATOR.get())) ||
+                    Utilities.isHolding(Minecraft.getInstance().player, (item) -> item.equals(Main.DISPLACEMENT_TOOL.get()));
             isHoldingRailItemOrBrush = isHoldingRailItem || isHoldingBrush;
         } else {
             isHoldingRailItem = false;
@@ -158,28 +154,17 @@ public class RailRenderDispatcher {
 
         Vec3 cameraBlockPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
         Vector3f cameraPos = new Vector3f(cameraBlockPos);
-        // List<RailChunkBase> railChunkList = new ArrayList<>(this.railChunkList);
-        // for (BakedRail rail : railRefMap.values()) {
-        //     if (rail.scriptContext == null) continue;
-        //     RailModelProperties properties = rail.getProperties();
-        //     if (properties == null) continue;
-        //     if (properties.script == null) continue;
-        //     properties.script.tryCallRenderFunctionAsync(rail.scriptContext);
-        //     railChunkList.addAll(rail.scriptContext.chunks.values());
-        // }
         railChunkList.sort(Comparator.comparingDouble(chunk -> chunk.getCameraDistManhattanXZ(cameraBlockPos)));
 
+        int buffersRebuilt = 0;
         Frustum cullingFrustum = ((LevelRendererAccessor)Minecraft.getInstance().levelRenderer).getCullingFrustum();
         ShaderProp shaderProp = new ShaderProp().setViewMatrix(viewMatrix);
 
-        int maxRailDistance = MTRClient.isReplayMod() ? 64 * 16 : (UtilitiesClient.getRenderDistance() + 3) * 16;
+        int maxRailDistance = MTRClient.isReplayMod() ? 64 * 16 : UtilitiesClient.getRenderDistance() * 16;
         boolean isOutsideRenderDistance = false;
-
-        RailChunkBase.upload();
-
         for (Iterator<RailChunkBase> it = railChunkList.iterator(); it.hasNext(); ) {
             RailChunkBase chunk = it.next();
-            if (chunk.containingRails.isEmpty() && chunk.containingRailsWriting.isEmpty()) {
+            if (chunk.containingRails.isEmpty()) {
                 chunk.close();
                 it.remove();
                 railChunkMap.get(chunk.modelKey).remove(chunk.chunkId);
@@ -190,14 +175,30 @@ public class RailRenderDispatcher {
                 isOutsideRenderDistance = true;
                 continue;
             }
-            if (!chunk.bufferBuilding && (chunk.isDirty || !chunk.bufferBuilt)) {
-                chunk.rebuildBuffer(level);
-                // RenderUtil.displayStatusMessage("Rebuilt: " + chunk.getChunkPos().toString());
+            if (chunk.isDirty || !chunk.bufferBuilt) {
+#if DEBUG
+                    chunk.rebuildBuffer(level);
+                    RenderUtil.displayStatusMessage("Rebuilt: " + chunk.getChunkPos().toString());
+#else
+                if (MTRClient.isReplayMod() || buffersRebuilt < 1) chunk.rebuildBuffer(level); // One per frame
+#endif
+                buffersRebuilt++;
             }
             if (chunk.bufferBuilt && cullingFrustum.isVisible(chunk.boundingBox)) {
                 chunk.enqueue(batchManager, shaderProp);
             }
-        }        
+        }
+
+//        Collection<BakedRail> bakedRails = railRefMap.values();
+//        for (BakedRail rail : bakedRails) {
+//            RailModelProperties prop = rail.getProperties();
+//            if (prop == null) {
+//                if (prop.script == null) continue;
+//            }
+//            if (rail.scriptContext == null) continue;
+//            prop.script.tryCallRenderFunctionAsync(rail.scriptContext);
+//            rail.scriptContext.commit(drawScheduler, viewMatrix, cullingFrustum, cameraPos, maxRailDistance);
+//        }
     }
 
     public void drawRailNodes(Level level, DrawScheduler drawScheduler, Matrix4f viewMatrix) {

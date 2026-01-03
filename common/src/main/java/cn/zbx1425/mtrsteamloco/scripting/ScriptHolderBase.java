@@ -299,6 +299,10 @@ public abstract class ScriptHolderBase {
                 entry.getValue() : 
                 ScriptResourceUtil.readString(entry.getKey());
 
+            if (scriptContent == null) {
+                continue;
+            }
+
             ScriptResourceUtil.executeScript(context, scriptContent, entry.getKey());
 
             for (String fn : functionNames) {

@@ -3,11 +3,13 @@ package cn.zbx1425.mtrsteamloco.render.rail;
 import cn.zbx1425.mtrsteamloco.data.RailExtraSupplier;
 import cn.zbx1425.mtrsteamloco.data.RailModelRegistry;
 import cn.zbx1425.sowcer.math.Matrix4f;
+import cn.zbx1425.sowcer.math.Vector3f;
 import cn.zbx1425.sowcer.util.AttrUtil;
 import net.minecraft.world.phys.Vec3;
 import mtr.data.Rail;
 import cn.zbx1425.mtrsteamloco.data.RailModelProperties;
 import net.minecraft.util.Mth;
+import cn.zbx1425.mtrsteamloco.Main;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,16 +28,12 @@ public class BakedRail {
     public int color;
 
     public BakedRail(Rail rail) {
-        this(rail, true);
-    }
-
-    public BakedRail(Rail rail, boolean genChunkMap) {
         this.rail = rail;
         modelKey = RailRenderDispatcher.getModelKeyForRender(rail);
         RailModelProperties prop = getProperties();
         color = AttrUtil.argbToBgr(rail.railType.color | 0xFF000000);
 
-        if (!modelKey.equals("null") && genChunkMap) {
+        if (!modelKey.equals("null")) {
             RailExtraSupplier supplier = (RailExtraSupplier) rail;
             final boolean reverse = supplier.getRenderReversed();
             final float interval = prop.repeatInterval;
@@ -48,8 +46,8 @@ public class BakedRail {
                 Vec3 mid = pre.add(thi).scale(0.5F);
                 float roll = RailExtraSupplier.getRollAngle(rail, i - interval / 2);
                 coveredChunks
-                    .computeIfAbsent(chunkIdFromWorldPos((int) mid.x, (int) mid.z), ignored -> new ArrayList<>())
-                    .add(getLookAtMat(mid, pre, thi, roll, yOffset, reverse, interval));
+                        .computeIfAbsent(chunkIdFromWorldPos((int) mid.x, (int) mid.z), ignored -> new ArrayList<>())
+                        .add(getLookAtMat(mid, pre, thi, roll, yOffset, reverse, interval));
                 pre = thi;
             }
         }

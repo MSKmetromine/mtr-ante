@@ -59,7 +59,7 @@ public abstract class ScriptHolderBase {
 
     private final boolean[] loading = new boolean[] { true };
 
-    protected static final String PRETREATMENT = "load(\"nashorn:mozilla_compat.js\");";
+    protected static final String PRETREATMENT = "load(\"nashorn:mozilla_compat.js\"); const _stringNativeSplit = String.prototype.split; String.prototype.split = function (splitter, limit) { const regex = new RegExp(splitter); return _stringNativeSplit.bind(this)(regex, limit); };";
 
     public ScriptHolderBase(String side) {
         this.side = side;

@@ -59,14 +59,14 @@ public abstract class ScriptHolderBase {
 
     private final boolean[] loading = new boolean[] { true };
 
-    protected static final String PRETREATMENT = "load(\"nashorn:mozilla_compat.js\"); const _stringNativeSplit = String.prototype.split; String.prototype.split = function (splitter, limit) { const regex = new RegExp(splitter); return _stringNativeSplit.bind(this)(regex, limit); };";
+    protected static final String PRETREATMENT = "load(\"nashorn:mozilla_compat.js\"); const _stringNativeSplit = String.prototype.split; String.prototype.split = function (splitter, limit) { const regex = new RegExp(splitter); return splitter.length > 1 ? _stringNativeSplit.bind(this)(regex, limit) : _stringNativeSplit.bind(this)(splitter, limit); };";
 
     public ScriptHolderBase(String side) {
         this.side = side;
     }
 
     private static final Set<String> ALLOWED_PACKAGES = Set.of(
-        "java.awt", "java.util", "mtr"
+        "java.lang", "java.awt", "java.util", "mtr"
     );
 
     public void load(

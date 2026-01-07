@@ -56,6 +56,8 @@ processResources {
 			"mtr_min_version": rootProject.mtr_min_version
 		)
 	}
+
+    from loom.accessWidenerPath
 }
 
 shadowJar {

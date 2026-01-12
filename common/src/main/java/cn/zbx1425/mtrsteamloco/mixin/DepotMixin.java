@@ -23,11 +23,11 @@ import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 @Mixin(Depot.class)
 public class DepotMixin {
 
-    @Inject(method = "generateMainRoute", remap = false, at = @At("HEAD"), cancellable = true)
-    private void generateMainRoute(MinecraftServer minecraftServer, Level world, DataCache dataCache, Map<BlockPos, Map<BlockPos, Rail>> rails, Set<Siding> sidings, Consumer<Thread> callback, CallbackInfo ci) {
-        System.out.println("DepotMixin generateMainRoute");
-		ci.cancel();
-
-		DepotPathGen.generateMainRoute(minecraftServer, world, dataCache, rails, sidings, callback, (Depot) (Object) this);
-	}
+//    @Inject(method = "generateMainRoute", remap = false, at = @At("HEAD"), cancellable = true)
+//    private void generateMainRoute(MinecraftServer minecraftServer, Level world, DataCache dataCache, Map<BlockPos, Map<BlockPos, Rail>> rails, Set<Siding> sidings, Consumer<Thread> callback, CallbackInfo ci) {
+//        System.out.println("DepotMixin generateMainRoute");
+//		ci.cancel();
+//
+//		DepotPathGen.generateMainRoute(minecraftServer, world, dataCache, rails, sidings, callback, (Depot) (Object) this);
+//	}
 }

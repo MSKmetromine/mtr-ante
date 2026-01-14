@@ -91,7 +91,7 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
         trainExtra.doorRightOpen[carIndex] = doorRightOpen;
         trainExtra.lastWorldPose[carIndex] = copy.copy();
         trainExtra.lastCarPosition[carIndex] = copy.getTranslationPart();
-        trainExtra.lastCarRotation[carIndex] = copy.getEulerAnglesXYZ();
+        trainExtra.lastCarRotation[carIndex] = new Vector3f(hasPitch ? pitch : 0.0, (float) Math.PI + yaw, isReversed ? -roll : roll);
         trainExtra.shouldRender = shouldRender;
         trainExtra.isInDetailDistance = true;// (posAverage != null && posAverage.distSqr(camera.getBlockPosition()) <= RenderTrains.DETAIL_RADIUS_SQUARED);
 
@@ -116,7 +116,7 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
             basePose.rotateZ(isReversed? -roll : roll);
             basePose.translate(0, 1, 0);
             synchronized (trainScripting) {
-                trainScripting.commitCar(carIndex, MainClient.drawScheduler, basePose, worldPose, light);
+                trainScripting.commitCar(carIndex, MainClient.drawScheduler, basePose, worldPose, light, carPose);
             }
         }
 

@@ -53,14 +53,14 @@ public class TrainDrawCalls extends AbstractDrawCalls {
         carSoundLists[car].add(new PlaySoundCall(sound, position, volume, pitch));
     }
 
-    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light) {
+    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4f carPose) {
         for (ClusterDrawCall clusterDrawCall : carDrawLists[car]) {
             clusterDrawCall.commit(drawScheduler, basePose, worldPose, light);
         }
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
         for (PlaySoundCall playSoundCall : carSoundLists[car]) {
-            playSoundCall.commit(level, basePose);
+            playSoundCall.commit(level, carPose);
         }
     }
 

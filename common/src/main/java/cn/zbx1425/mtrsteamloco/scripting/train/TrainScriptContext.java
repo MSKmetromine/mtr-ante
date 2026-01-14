@@ -46,9 +46,9 @@ public class TrainScriptContext extends AbstractScriptContext {
         }
     }
 
-    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light) {
+    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4f carPose) {
         drawCalls[car].commit(drawScheduler, basePose, worldPose, light);
-        scriptResult.commitCar(car, drawScheduler, basePose, worldPose, light);
+        scriptResult.commitCar(car, drawScheduler, basePose, worldPose, light, carPose);
     }
 
     @Override

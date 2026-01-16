@@ -86,66 +86,66 @@ jobs:
 #          name: MTR-ANTE-${{ env.MOD_VERSION }}-${{ github.run_number }}
 #          path: artifacts/*.jar
 #          compression-level: 9
-  github-release:
-    if: startsWith(github.event.head_commit.message, 'rel -g') || startsWith(github.event.head_commit.message, 'rel -a') || startsWith(github.event.head_commit.message, 'rel -t')
-    runs-on: ubuntu-latest
-    needs: upload-collectively
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Extract changelog
-        run: |
-          chmod +x ./extract_changelog.sh
-          ./extract_changelog.sh
-      - name: Read changelog content
-        id: read_changelog
-        run: |
-          
-          CONTENT=$(cat extracted_changelog.md)
-          
-          # 使用EOF声明多行输出
-          echo "content<<EOF" >> $GITHUB_OUTPUT
-          echo "$CONTENT" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-
-      - name: Get Mod Version
-        run: |
-          MOD_VERSION=$(grep "mod_version=" gradle.properties | cut -d'=' -f2)
-          echo "MOD_VERSION=$MOD_VERSION" >> $GITHUB_ENV
-
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: MTR-ANTE-${{ github.run_number }}-${{ env.MOD_VERSION }}
-          path: artifacts
-          merge-multiple: true
-
-      - name: Set current date
-        run: echo "CUR_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      - name: Release
-        if: ${{ !startsWith(github.event.head_commit.message, 'rel -t') }}
-        uses: softprops/action-gh-release@v2
-        with:
-          files: artifacts/*.jar
-          body: |
-            更新日期: ${{ env.CUR_DATE }}
-            工作流: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-
-            更新内容:
-            ${{ steps.read_changelog.outputs.content }}
-            
-            相关链接:
-            - [RailwayAesthetics-Future文档](https://aphrodite281.github.io/RailwayAesthetics-Future/#/)
-            - [ANTE文档](https://aphrodite281.github.io/mtr-ante/#/)
-            - [RailwayAesthetics-Future发行版](https://github.com/aphrodite281/RailwayAesthetics-Future/releases)
-            - [ANTE发行版](https://github.com/aphrodite281/mtr-ante/releases)
-          draft: false
-          prerelease: false
-          tag_name: ${{ env.MOD_VERSION }}
+#  github-release:
+#    if: startsWith(github.event.head_commit.message, 'rel -g') || startsWith(github.event.head_commit.message, 'rel -a') || startsWith(github.event.head_commit.message, 'rel -t')
+#    runs-on: ubuntu-latest
+#    needs: upload-collectively
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v4
+#        with:
+#          fetch-depth: 0
+#      - name: Extract changelog
+#        run: |
+#          chmod +x ./extract_changelog.sh
+#          ./extract_changelog.sh
+#      - name: Read changelog content
+#        id: read_changelog
+#        run: |
+#
+#          CONTENT=$(cat extracted_changelog.md)
+#
+#          # 使用EOF声明多行输出
+#          echo "content<<EOF" >> $GITHUB_OUTPUT
+#          echo "$CONTENT" >> $GITHUB_OUTPUT
+#          echo "EOF" >> $GITHUB_OUTPUT
+#
+#
+#      - name: Get Mod Version
+#        run: |
+#          MOD_VERSION=$(grep "mod_version=" gradle.properties | cut -d'=' -f2)
+#          echo "MOD_VERSION=$MOD_VERSION" >> $GITHUB_ENV
+#
+#      - name: Download release artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: MTR-ANTE-${{ github.run_number }}-${{ env.MOD_VERSION }}
+#          path: artifacts
+#          merge-multiple: true
+#
+#      - name: Set current date
+#        run: echo "CUR_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+#
+#      - name: Release
+#        if: ${{ !startsWith(github.event.head_commit.message, 'rel -t') }}
+#        uses: softprops/action-gh-release@v2
+#        with:
+#          files: artifacts/*.jar
+#          body: |
+#            更新日期: ${{ env.CUR_DATE }}
+#            工作流: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+#
+#            更新内容:
+#            ${{ steps.read_changelog.outputs.content }}
+#
+#            相关链接:
+#            - [RailwayAesthetics-Future文档](https://aphrodite281.github.io/RailwayAesthetics-Future/#/)
+#            - [ANTE文档](https://aphrodite281.github.io/mtr-ante/#/)
+#            - [RailwayAesthetics-Future发行版](https://github.com/aphrodite281/RailwayAesthetics-Future/releases)
+#            - [ANTE发行版](https://github.com/aphrodite281/mtr-ante/releases)
+#          draft: false
+#          prerelease: false
+#          tag_name: ${{ env.MOD_VERSION }}
   modrinth-publish:
     if: startsWith(github.event.head_commit.message, 'rel -m') || startsWith(github.event.head_commit.message, 'rel -a') || startsWith(github.event.head_commit.message, 'rel -t')
     strategy:

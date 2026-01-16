@@ -59,33 +59,33 @@ jobs:
           name: MTR-ANTE-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
           path: build/*.jar
           compression-level: 9
-  upload-collectively:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        with:
-            fetch-depth: 0
-        uses: actions/checkout@v4
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-          merge-multiple: true
-      - name: Display structure of downloaded files
-        run: ls -R artifacts
-
-      - name: Get Mod Version
-        run: |
-          MOD_VERSION=$(grep "mod_version=" gradle.properties | cut -d'=' -f2)
-          echo "MOD_VERSION=$MOD_VERSION"
-          echo "MOD_VERSION=$MOD_VERSION" >> $GITHUB_ENV
-      - name: Capture release artifacts collectively
-        uses: actions/upload-artifact@v4
-        with:
-          name: MTR-ANTE-${{ env.MOD_VERSION }}-${{ github.run_number }}
-          path: artifacts/*.jar
-          compression-level: 9
+#  upload-collectively:
+#    needs: build
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Checkout repository
+#        with:
+#            fetch-depth: 0
+#        uses: actions/checkout@v4
+#      - name: Download release artifacts
+#        uses: actions/download-artifact@v4
+#        with:
+#          path: artifacts
+#          merge-multiple: true
+#      - name: Display structure of downloaded files
+#        run: ls -R artifacts
+#
+#      - name: Get Mod Version
+#        run: |
+#          MOD_VERSION=$(grep "mod_version=" gradle.properties | cut -d'=' -f2)
+#          echo "MOD_VERSION=$MOD_VERSION"
+#          echo "MOD_VERSION=$MOD_VERSION" >> $GITHUB_ENV
+#      - name: Capture release artifacts collectively
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: MTR-ANTE-${{ env.MOD_VERSION }}-${{ github.run_number }}
+#          path: artifacts/*.jar
+#          compression-level: 9
   github-release:
     if: startsWith(github.event.head_commit.message, 'rel -g') || startsWith(github.event.head_commit.message, 'rel -a') || startsWith(github.event.head_commit.message, 'rel -t')
     runs-on: ubuntu-latest

@@ -73,6 +73,8 @@ public abstract class ScriptHolderBase {
         String name, String contextTypeName, ResourceManager resourceManager, 
         Map<ResourceLocation, String> scripts, JsonObject config, String key, 
         String... functionNames) throws Exception {
+        this.loading[0] = true;
+
         this.name = name;
         this.contextTypeName = contextTypeName;
         this.scripts = scripts;
@@ -455,5 +457,8 @@ public abstract class ScriptHolderBase {
             context.close();
             context = null;
         }
+
+        globalBindings = null;
+        functions.clear();
     }
 }

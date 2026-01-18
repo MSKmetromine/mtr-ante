@@ -63,7 +63,7 @@ public class ScriptDebugOverlay {
             if (holder.failTime > 0) {
                 y = drawText(vdStuff, font, holder.name + " FAILED", 0, y, 0xFFFF0000);
                 if (holder.failException != null) {
-                    y = drawText(vdStuff, font, holder.failException.getMessage(), 5, y, 0xFFFF8888);
+                    y = drawText(vdStuff, font, String.valueOf(holder.failException.getMessage()), 5, y, 0xFFFF8888);
                 }
             } else {
                 y = drawText(vdStuff, font, holder.name, 0, y, 0xFFAAAAFF);

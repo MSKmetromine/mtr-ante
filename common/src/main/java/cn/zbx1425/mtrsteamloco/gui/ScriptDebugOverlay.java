@@ -21,7 +21,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.FormattedCharSequence;
 import cn.zbx1425.mtrsteamloco.scripting.util.OrderedMap;
+import org.graalvm.polyglot.PolyglotException;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +66,30 @@ public class ScriptDebugOverlay {
             if (holder.failTime > 0) {
                 y = drawText(vdStuff, font, holder.name + " FAILED", 0, y, 0xFFFF0000);
                 if (holder.failException != null) {
-                    y = drawText(vdStuff, font, String.valueOf(holder.failException.getMessage()), 5, y, 0xFFFF8888);
+                    StringWriter info = new StringWriter();
+
+                    if (holder.failException.getMessage() != null) {
+                        info.append(holder.failException.getMessage());
+                    } else {
+                        info.append(holder.failException.toString());
+                    }
+
+                    info.append("\n");
+
+                    if (holder.failException instanceof PolyglotException polyglotException) {
+                        for (PolyglotException.StackFrame frame : polyglotException.getPolyglotStackTrace()) {
+                            if (!frame.isGuestFrame()) {
+                                continue;
+                            }
+
+                            info.append("    at " + frame.toString());
+                            info.append("\n");
+                        }
+                    } else {
+                        holder.failException.printStackTrace(new PrintWriter(info));
+                    }
+
+                    y = drawText(vdStuff, font, info.toString(), 5, y, 0xFFFF8888);
                 }
             } else {
                 y = drawText(vdStuff, font, holder.name, 0, y, 0xFFAAAAFF);

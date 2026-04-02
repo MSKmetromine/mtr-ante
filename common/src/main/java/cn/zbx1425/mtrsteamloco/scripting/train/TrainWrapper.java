@@ -1,6 +1,7 @@
 package cn.zbx1425.mtrsteamloco.scripting.train;
 
 import cn.zbx1425.mtrsteamloco.mixin.TrainAccessor;
+import cn.zbx1425.mtrsteamloco.util.PositionRotation;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.sowcer.math.Vector3f;
 import mtr.MTRClient;
@@ -293,5 +294,10 @@ public class TrainWrapper {
     @SuppressWarnings("unused") 
     public void putCustomConfig(String key, String value) {
         getCustomConfigs().put(key, value);
+    }
+
+    @SuppressWarnings("unused")
+    public List<PositionRotation> getBogies(int car) {
+        return this.supplier.getCarPositions()[car].bogiesRelative();
     }
 }

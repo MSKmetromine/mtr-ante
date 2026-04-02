@@ -1,5 +1,6 @@
 package cn.zbx1425.mtrsteamloco.data;
 
+import cn.zbx1425.mtrsteamloco.util.CarPosition;
 import mtr.data.Rail;
 import mtr.data.Train;
 
@@ -34,4 +35,6 @@ public interface TrainExtraSupplier {
         TrainExtraSupplier supplier = (TrainExtraSupplier) train;
         return (supplier.getRollAngleAt(p1) + supplier.getRollAngleAt(p2)) / 2;
     }
+
+    CarPosition[] getCarPositions();
 }

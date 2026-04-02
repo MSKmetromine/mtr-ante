@@ -1,43 +1,37 @@
 package cn.zbx1425.mtrsteamloco.mixin;
 
 import cn.zbx1425.mtrsteamloco.Main;
+import cn.zbx1425.mtrsteamloco.util.CarPosition;
+import cn.zbx1425.mtrsteamloco.util.CustomTrainType;
+import cn.zbx1425.mtrsteamloco.util.PositionRotation;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import mtr.block.BlockPSDAPGBase;
 import mtr.block.BlockPlatform;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.level.Level;
 import cn.zbx1425.mtrsteamloco.block.BlockEyeCandy;
 import net.minecraft.world.phys.Vec3;
-import mtr.render.TrainRendererBase;
-import net.minecraft.util.Mth;
 import mtr.path.PathData;
-import cn.zbx1425.sowcer.math.Vector3f;
 import cn.zbx1425.mtrsteamloco.data.TrainExtraSupplier;
 import cn.zbx1425.mtrsteamloco.data.RailExtraSupplier;
 import org.msgpack.core.MessagePacker;
 import cn.zbx1425.mtrsteamloco.network.util.StringMapSerializer;
 import org.msgpack.value.Value;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.nbt.CompoundTag;
-import cn.zbx1425.mtrsteamloco.Main;
 import cn.zbx1425.mtrsteamloco.data.ConfigResponder;
 import mtr.data.*;
 
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.io.IOException;
 
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyConstant;
-import org.spongepowered.asm.mixin.injection.Constant;
+import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.Shadow;
@@ -51,6 +45,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     private Map<String, String> customConfigs = new HashMap<>();
     private Map<String, ConfigResponder> configResponders = new HashMap<>();
     private boolean isConfigsChanged = false;
+
+    private CustomTrainType customTrainType;
+    private CarPosition[] carPositions;
 
     @Override
     public Map<String, String> getCustomConfigs() {
@@ -82,8 +79,49 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         return configResponders;
     }
 
+    @Override
+    public CarPosition[] getCarPositions() {
+        return carPositions;
+    }
+
     @Shadow(remap = false)
     public abstract int getIndex(double tempRailProgress, boolean roundDown);
+
+    @Shadow
+    protected abstract float getModelZOffset();
+
+    @Shadow
+    @Final
+    public TransportMode transportMode;
+
+    @Shadow
+    protected double railProgress;
+
+    @Shadow
+    @Final
+    public int spacing;
+
+    @Shadow
+    protected boolean reversed;
+
+    @Shadow
+    @Final
+    public int trainCars;
+
+    @Shadow
+    protected abstract Vec3 getRoutePosition(int car, int trainSpacing);
+
+    @Shadow
+    public static double getAverage(double a, double b) {
+        return 0;
+    }
+
+    @Shadow
+    @Final
+    public String baseTrainType;
+
+    @Shadow
+    protected abstract double asin(double v);
 
     @Override
     public float getRollAngleAt(double value) {
@@ -92,6 +130,12 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         Rail r = path.get(i).rail;
         float rot = RailExtraSupplier.getRollAngle(r, value);
         return rot;
+    }
+
+    @Inject(method = "<init>(JJFLjava/lang/String;Ljava/lang/String;ILjava/util/List;Ljava/util/List;IIFZII)V", at = @At("TAIL"), remap = false)
+    private void fromDefinitions(long id, long sidingId, float railLength, String trainId, String baseTrainType, int trainCars, List<PathData> path, List<Double> distances, int repeatIndex1, int repeatIndex2, float accelerationConstant, boolean isManualAllowed, int maxManualSpeed, int manualToAutomaticTime, CallbackInfo ci) {
+        this.customTrainType = CustomTrainType.parse(this.baseTrainType);
+        this.carPositions = new CarPosition[this.trainCars];
     }
 
     @Inject(method = "<init>(JFLjava/util/List;Ljava/util/List;IIFZIILjava/util/Map;)V", at = @At("TAIL"), remap = false)
@@ -107,6 +151,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         } catch (IOException e) {
             customConfigs = new HashMap<>();
         }
+
+        this.customTrainType = CustomTrainType.parse(this.baseTrainType);
+        this.carPositions = new CarPosition[this.trainCars];
     }
 
     @Inject(method = "<init>(JFLjava/util/List;Ljava/util/List;IIFZIILnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
@@ -121,6 +168,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         } catch (IOException e) {
             customConfigs = new HashMap<>();
         }
+
+        this.customTrainType = CustomTrainType.parse(this.baseTrainType);
+        this.carPositions = new CarPosition[this.trainCars];
     }
 
     @Inject(method = "<init>(Lnet/minecraft/network/FriendlyByteBuf;)V", at = @At("TAIL"))
@@ -130,6 +180,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         } catch (IOException e) {
             customConfigs = new HashMap<>();
         }
+
+        this.customTrainType = CustomTrainType.parse(this.baseTrainType);
+        this.carPositions = new CarPosition[this.trainCars];
     }
 
     @Inject(method = "toMessagePack", at = @At("TAIL"), remap = false)
@@ -250,5 +303,112 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         ci.setReturnValue(RailType.values()[maxManualSpeed]);
         ci.cancel();
         return;
+    }
+
+    private PositionRotation getBogiePositionRotation(double carRailProgress, double halfLength, double bogiePosition, double totalVehicleLength) {
+        final double bogieProgress = carRailProgress + (reversed ? 1 : -1) * (halfLength + bogiePosition);
+
+        final double lowerBound = railProgress - totalVehicleLength;
+        final double clampedValue = Math.min(Math.max(bogieProgress, lowerBound), railProgress);
+
+        final double clamp = Math.min(Math.max(Math.min(Math.abs(clampedValue - lowerBound), Math.abs(clampedValue - railProgress)), 0.1), 1.0);
+
+        final double value1 = Math.min(Math.max(clampedValue + (reversed ? -clamp : clamp), lowerBound), railProgress - 0.001);
+        final double value2 = Math.min(Math.max(clampedValue - (reversed ? -clamp : clamp), lowerBound), railProgress - 0.001);
+
+        final int index1 = this.getIndex(value1, false);
+        final Vec3 position1 = ((PathData)this.path.get(index1)).rail.getPosition(value1 - (index1 == 0 ? (double)0.0F : (Double)this.distances.get(index1 - 1))).add((double)0.0F, (double)this.transportMode.railOffset, (double)0.0F);
+
+        final int index2 = this.getIndex(value2, false);
+        final Vec3 position2 = ((PathData)this.path.get(index2)).rail.getPosition(value2 - (index2 == 0 ? (double)0.0F : (Double)this.distances.get(index2 - 1))).add((double)0.0F, (double)this.transportMode.railOffset, (double)0.0F);
+
+        final float yaw = (float) Mth.atan2(position2.x - position1.x, position2.z - position1.z);
+        final float pitch = (float) this.asin(position2.y - position1.y);
+
+        final Vec3 average = new Vec3(
+                getAverage(position1.x(), position2.x()),
+                getAverage(position1.y(), position2.y()),
+                getAverage(position1.z(), position2.z())
+        );
+
+        return new PositionRotation(average.add(0.0, 1.0, 0.0), yaw, pitch);
+    }
+
+    @Inject(method = "getRoutePosition", at = @At("HEAD"), remap = false)
+    public void getRoutePosition(int car, int trainSpacing, CallbackInfoReturnable<Vec3> cir) {
+        if (car < 0 || car >= this.trainCars) {
+            return;
+        }
+
+        final double totalVehicleLength = trainCars * spacing;
+
+        final double carRailProgress = (railProgress - (reversed ? totalVehicleLength : 0)) + ((reversed ? 1 : -1) * car * spacing);
+
+        final double halfLength = spacing / 2.0;
+
+        PositionRotation bogie1 = this.getBogiePositionRotation(
+                carRailProgress,
+                halfLength,
+                customTrainType.getBogiePosition1(),
+                totalVehicleLength
+        );
+
+        PositionRotation bogie2 = this.getBogiePositionRotation(
+                carRailProgress,
+                halfLength,
+                customTrainType.getBogiePosition2(),
+                totalVehicleLength
+        );
+
+        Vec3 carPosition = new Vec3(
+                getAverage(bogie1.position().x(), bogie2.position().x()),
+                getAverage(bogie1.position().y(), bogie2.position().y()),
+                getAverage(bogie1.position().z(), bogie2.position().z())
+        );
+
+        double pivotOffset = getAverage(
+                customTrainType.getBogiePosition1(),
+                customTrainType.getBogiePosition2()
+        );
+
+        final float yaw = (float) Mth.atan2(bogie2.position().x() - bogie1.position().x(), bogie2.position().z() - bogie1.position().z());
+        final float pitch = (float) this.asin(bogie2.position().y() - bogie1.position().y());
+
+        final PositionRotation carPositionRotation = new PositionRotation(carPosition, yaw, pitch);
+
+        this.carPositions[car] = new CarPosition(carPositionRotation, Arrays.asList(bogie1, bogie2));
+    }
+
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "x", ordinal = 0)
+    public double modifyCalculateCarX(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
+        return this.carPositions[index].car().position().x();
+    }
+
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "y", ordinal = 1)
+    public double modifyCalculateCarY(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
+        return this.carPositions[index].car().position().y();
+    }
+
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "z", ordinal = 2)
+    public double modifyCalculateCarZ(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
+        return this.carPositions[index].car().position().z();
+    }
+
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "realSpacing", ordinal = 3)
+    public double modifyCalculateCarRealSpacing(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
+        Vec3 bogie1 = this.carPositions[index].bogies().get(0).position();
+        Vec3 bogie2 = this.carPositions[index].bogies().get(1).position();
+
+        return bogie1.distanceTo(bogie2);
+    }
+
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "yaw", ordinal = 0)
+    public float modifyCalculateCarYaw(float value, Level world, Vec3[] positions, int index, int dwellTicks) {
+        return this.carPositions[index].car().yaw();
+    }
+
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "pitch", ordinal = 1)
+    public float modifyCalculateCarPitch(float value, Level world, Vec3[] positions, int index, int dwellTicks) {
+        return this.carPositions[index].car().pitch();
     }
 }

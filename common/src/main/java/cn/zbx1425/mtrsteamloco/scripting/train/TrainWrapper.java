@@ -2,6 +2,7 @@ package cn.zbx1425.mtrsteamloco.scripting.train;
 
 import cn.zbx1425.mtrsteamloco.mixin.TrainAccessor;
 import cn.zbx1425.mtrsteamloco.util.PositionRotation;
+import cn.zbx1425.mtrsteamloco.util.ScriptPositionRotation;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.sowcer.math.Vector3f;
 import mtr.MTRClient;
@@ -297,7 +298,14 @@ public class TrainWrapper {
     }
 
     @SuppressWarnings("unused")
-    public List<PositionRotation> getBogies(int car) {
-        return this.supplier.getCarPositions()[car].bogiesRelative();
+    public List<ScriptPositionRotation> getBogies(int car) {
+        var bogies = this.supplier.getCarPositions()[car].bogiesRelative();
+        List<ScriptPositionRotation> scriptPositions = new ArrayList<>();
+
+        for (var bogie : bogies) {
+            scriptPositions.add(bogie.toScript());
+        }
+
+        return scriptPositions;
     }
 }

@@ -87,40 +87,40 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @Shadow(remap = false)
     public abstract int getIndex(double tempRailProgress, boolean roundDown);
 
-    @Shadow
+    @Shadow(remap = false)
     protected abstract float getModelZOffset();
 
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public TransportMode transportMode;
 
-    @Shadow
+    @Shadow(remap = false)
     protected double railProgress;
 
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public int spacing;
 
-    @Shadow
+    @Shadow(remap = false)
     protected boolean reversed;
 
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public int trainCars;
 
     @Shadow
     protected abstract Vec3 getRoutePosition(int car, int trainSpacing);
 
-    @Shadow
+    @Shadow(remap = false)
     public static double getAverage(double a, double b) {
         return 0;
     }
 
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public String baseTrainType;
 
-    @Shadow
+    @Shadow(remap = false)
     protected abstract double asin(double v);
 
     @Override
@@ -379,22 +379,22 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         this.carPositions[car] = new CarPosition(carPositionRotation, Arrays.asList(bogie1, bogie2));
     }
 
-    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "x", ordinal = 0)
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "x", ordinal = 0)
     public double modifyCalculateCarX(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
         return this.carPositions[index].car().position().x();
     }
 
-    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "y", ordinal = 1)
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "y", ordinal = 1)
     public double modifyCalculateCarY(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
         return this.carPositions[index].car().position().y();
     }
 
-    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "z", ordinal = 2)
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "z", ordinal = 2)
     public double modifyCalculateCarZ(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
         return this.carPositions[index].car().position().z();
     }
 
-    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "realSpacing", ordinal = 3)
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "realSpacing", ordinal = 3)
     public double modifyCalculateCarRealSpacing(double value, Level world, Vec3[] positions, int index, int dwellTicks) {
         Vec3 bogie1 = this.carPositions[index].bogies().get(0).position();
         Vec3 bogie2 = this.carPositions[index].bogies().get(1).position();
@@ -402,12 +402,12 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         return bogie1.distanceTo(bogie2);
     }
 
-    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "yaw", ordinal = 0)
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "yaw", ordinal = 0)
     public float modifyCalculateCarYaw(float value, Level world, Vec3[] positions, int index, int dwellTicks) {
         return this.carPositions[index].car().yaw();
     }
 
-    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), remap = false, name = "pitch", ordinal = 1)
+    @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "pitch", ordinal = 1)
     public float modifyCalculateCarPitch(float value, Level world, Vec3[] positions, int index, int dwellTicks) {
         return this.carPositions[index].car().pitch();
     }

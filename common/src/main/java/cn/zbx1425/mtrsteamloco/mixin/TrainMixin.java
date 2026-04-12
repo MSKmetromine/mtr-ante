@@ -371,6 +371,10 @@ public abstract class TrainMixin implements TrainExtraSupplier{
                 customTrainType.getBogiePosition2()
         );
 
+        carPosition = carPosition.add(
+                bogie2.position().subtract(bogie1.position()).scale(pivotOffset)
+        );
+
         final float yaw = (float) Mth.atan2(bogie2.position().x() - bogie1.position().x(), bogie2.position().z() - bogie1.position().z());
         final float pitch = (float) this.asin(bogie2.position().y() - bogie1.position().y());
 
@@ -399,7 +403,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         Vec3 bogie1 = this.carPositions[index].bogies().get(0).position();
         Vec3 bogie2 = this.carPositions[index].bogies().get(1).position();
 
-        return bogie1.distanceTo(bogie2);
+        return bogie1.distanceTo(bogie2)
+                + (spacing / 2.0 - Math.abs(customTrainType.getBogiePosition1()))
+                + (spacing / 2.0 - Math.abs(customTrainType.getBogiePosition2()));
     }
 
     @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "yaw", ordinal = 0)

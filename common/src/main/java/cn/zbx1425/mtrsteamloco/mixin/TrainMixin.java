@@ -323,7 +323,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         final Vec3 position2 = ((PathData)this.path.get(index2)).rail.getPosition(value2 - (index2 == 0 ? (double)0.0F : (Double)this.distances.get(index2 - 1))).add((double)0.0F, (double)this.transportMode.railOffset, (double)0.0F);
 
         final float yaw = (float) Mth.atan2(position2.x - position1.x, position2.z - position1.z);
-        final float pitch = (float) this.asin(position2.y - position1.y);
+        final float pitch = (float) this.asin((position2.y - position1.y) / position2.distanceTo(position1));
 
         final Vec3 average = new Vec3(
                 getAverage(position1.x(), position2.x()),
@@ -376,7 +376,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         );
 
         final float yaw = (float) Mth.atan2(bogie2.position().x() - bogie1.position().x(), bogie2.position().z() - bogie1.position().z());
-        final float pitch = (float) this.asin(bogie2.position().y() - bogie1.position().y());
+        final float pitch = (float) this.asin((bogie2.position().y() - bogie1.position().y()) / bogie2.position().distanceTo(bogie1.position()));
 
         final PositionRotation carPositionRotation = new PositionRotation(carPosition, yaw, pitch);
 

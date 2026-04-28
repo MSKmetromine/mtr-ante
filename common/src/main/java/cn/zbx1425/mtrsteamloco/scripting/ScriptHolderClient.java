@@ -5,6 +5,7 @@ import cn.zbx1425.mtrsteamloco.MainClient;
 import cn.zbx1425.mtrsteamloco.scripting.util.client.*;
 import cn.zbx1425.mtrsteamloco.scripting.util.*;
 import cn.zbx1425.sowcer.math.Matrices;
+import cn.zbx1425.sowcer.util.GlStateTracker;
 import mtr.mappings.UtilitiesClient;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.sowcer.math.Vector3f;
@@ -138,5 +139,12 @@ public class ScriptHolderClient extends ScriptHolderBase {
             injects.put("foundMadParticle", false);
             // Main.LOGGER.warn("MadParticle", ignored);
         }*/
+    }
+
+    @Override
+    protected void loadImpl(String name, String contextTypeName, ResourceManager resourceManager, Map<ResourceLocation, String> scripts, JsonObject config, String key, String... functionNames) throws Exception {
+        GlStateTracker.capture();
+        super.loadImpl(name, contextTypeName, resourceManager, scripts, config, key, functionNames);
+        GlStateTracker.restore();
     }
 }

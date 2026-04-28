@@ -1,6 +1,7 @@
 package cn.zbx1425.sowcerext.model.loader;
 
 import cn.zbx1425.mtrsteamloco.BuildConfig;
+import cn.zbx1425.mtrsteamloco.model.ModelCache;
 import cn.zbx1425.sowcer.batch.MaterialProp;
 import cn.zbx1425.sowcerext.model.Face;
 import cn.zbx1425.sowcerext.model.RawMesh;
@@ -61,6 +62,7 @@ public class ObjModelLoader {
 
     public static Map<String, RawModel> loadModels(ResourceManager resourceManager, ResourceLocation objLocation, AtlasManager atlasManager) throws IOException {
         Obj srcObj = ObjReader.read(Utilities.getInputStream(resourceManager.getResource(objLocation)));
+
         Map<String, Mtl> materials = loadMaterials(resourceManager, srcObj, objLocation);
 
         HashMap<String, RawModel> result = new HashMap<>();
@@ -71,6 +73,7 @@ public class ObjModelLoader {
             model.sourceLocation = new ResourceLocation(objLocation.getNamespace(), objLocation.getPath() + "/" + compliantKey);
             result.put(groupEntry.getKey(), model);
         }
+
         return result;
     }
 
@@ -154,6 +157,7 @@ public class ObjModelLoader {
         }
 
         model.generateNormals();
+
         model.distinct();
         return model;
     }

@@ -5,36 +5,24 @@ import net.minecraft.resources.ResourceLocation;
 import com.google.gson.JsonObject;
 import cn.zbx1425.mtrsteamloco.Main;
 import net.minecraft.world.entity.player.Player;
-import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import cn.zbx1425.mtrsteamloco.scripting.util.*;
 import cn.zbx1425.sowcer.math.*;
 import cn.zbx1425.mtrsteamloco.data.ShapeSerializer;
 import net.minecraft.network.chat.Component;
-import cn.zbx1425.mtrsteamloco.Main;
 
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.io.IOAccess;
 import org.graalvm.polyglot.EnvironmentAccess;
-import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.SandboxPolicy;
-import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
-import org.graalvm.polyglot.proxy.ProxyExecutable;
 import org.graalvm.polyglot.PolyglotAccess;
 import org.graalvm.polyglot.proxy.ProxyObject;
 import org.graalvm.polyglot.io.FileSystem;
-import org.graalvm.polyglot.io.FileSystem.Selector;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Consumer;
-import java.lang.reflect.Method;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.nio.file.Path;
 
 public abstract class ScriptHolderBase {
@@ -57,7 +45,9 @@ public abstract class ScriptHolderBase {
     private String key;
     private String[] functionNames;
 
+    private LoadData loadData = null;
     private final boolean[] loading = new boolean[] { true };
+    private boolean loaded = false;
 
     protected static final String PRETREATMENT = "load(\"nashorn:mozilla_compat.js\"); const _stringNativeSplit = String.prototype.split; String.prototype.split = function (splitter, limit) { const regex = new RegExp(splitter); return splitter.length > 1 ? _stringNativeSplit.bind(this)(regex, limit) : _stringNativeSplit.bind(this)(splitter, limit); };";
 
@@ -69,7 +59,98 @@ public abstract class ScriptHolderBase {
         "java.lang", "java.awt", "java.util", "mtr"
     );
 
+    private static class LoadData {
+        private final String name;
+        private final String contextTypeName;
+        private final ResourceManager resourceManager;
+        private final Map<ResourceLocation, String> scripts;
+        private final JsonObject config;
+        private final String key;
+        private final String[] functionNames;
+
+        private LoadData(String name, String contextTypeName, ResourceManager resourceManager,
+                         Map<ResourceLocation, String> scripts, JsonObject config, String key,
+                         String... functionNames) {
+            this.name = name;
+            this.contextTypeName = contextTypeName;
+            this.resourceManager = resourceManager;
+            this.scripts = scripts;
+            this.config = config;
+            this.key = key;
+            this.functionNames = functionNames;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getContextTypeName() {
+            return contextTypeName;
+        }
+
+        public ResourceManager getResourceManager() {
+            return resourceManager;
+        }
+
+        public Map<ResourceLocation, String> getScripts() {
+            return scripts;
+        }
+
+        public JsonObject getConfig() {
+            return config;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public String[] getFunctionNames() {
+            return functionNames;
+        }
+    }
+
     public void load(
+            String name, String contextTypeName, ResourceManager resourceManager,
+            Map<ResourceLocation, String> scripts, JsonObject config, String key,
+            String... functionNames
+    ) throws Exception {
+        this.loadData = new LoadData(name, contextTypeName, resourceManager, scripts, config, key, functionNames);
+        this.loaded = false;
+    }
+
+    private void ensureLoaded() {
+        if (this.loaded) {
+            return;
+        }
+
+        if (this.loadData == null) {
+            throw new IllegalStateException("Load before initialization");
+        }
+
+        this.loaded = true;
+
+        try {
+            this.loadImpl(
+                    this.loadData.name,
+                    this.loadData.contextTypeName,
+                    this.loadData.resourceManager,
+                    this.loadData.scripts,
+                    this.loadData.config,
+                    this.loadData.key,
+                    this.loadData.functionNames
+            );
+        } catch (Exception e) {
+            this.failTime = System.currentTimeMillis();
+            this.failException = e;
+
+            return;
+        }
+
+        this.failTime = 0;
+        this.failException = null;
+    }
+
+    protected void loadImpl(
         String name, String contextTypeName, ResourceManager resourceManager, 
         Map<ResourceLocation, String> scripts, JsonObject config, String key, 
         String... functionNames) throws Exception {
@@ -418,6 +499,7 @@ public abstract class ScriptHolderBase {
     }
 
     public void tryCallFunctionAsync(String function, AbstractScriptContext scriptCtx, Runnable callback, Object... args) {
+        this.ensureLoaded();
         if (!(scriptCtx.scriptStatus == null || scriptCtx.scriptStatus.isDone())) return;
         if (scriptCtx.disposed) return;
         List<Value> functions = this.functions.get(function);

@@ -1,43 +1,19 @@
 package cn.zbx1425.mtrsteamloco.scripting.util.client;
 
-import cn.zbx1425.mtrsteamloco.BuildConfig;
 import cn.zbx1425.mtrsteamloco.Main;
 import cn.zbx1425.mtrsteamloco.mixin.ClientCacheAccessor;
-import cn.zbx1425.mtrsteamloco.render.integration.MtrModelRegistryUtil;
-import cn.zbx1425.mtrsteamloco.scripting.util.client.GraphicsTexture;
-import cn.zbx1425.sowcerext.util.ResourceUtil;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import mtr.client.ClientData;
 import mtr.mappings.Utilities;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.particles.ParticleType;
 #if MC_VERSION >= "11903"
 import net.minecraft.core.registries.BuiltInRegistries;
 #else
-import net.minecraft.core.Registry;
 #endif
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.TagParser;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import cn.zbx1425.mtrsteamloco.CustomResources;
-import cn.zbx1425.mtrsteamloco.scripting.ScriptResourceUtil;
+import cn.zbx1425.mtrsteamloco.scripting.util.ScriptResourceUtil;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
-import java.awt.font.FontRenderContext;
-import java.awt.font.TextAttribute;
-import java.awt.geom.AffineTransform;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.text.AttributedString;
-import java.util.*;
-import java.util.List;
 
 @SuppressWarnings("unused")
 public class ScriptResourceUtilClient extends ScriptResourceUtil {

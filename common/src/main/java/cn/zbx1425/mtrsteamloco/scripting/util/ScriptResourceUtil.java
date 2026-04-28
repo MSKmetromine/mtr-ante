@@ -1,12 +1,10 @@
-package cn.zbx1425.mtrsteamloco.scripting;
+package cn.zbx1425.mtrsteamloco.scripting.util;
 
 import cn.zbx1425.mtrsteamloco.BuildConfig;
 import cn.zbx1425.mtrsteamloco.Main;
-import cn.zbx1425.mtrsteamloco.render.integration.MtrModelRegistryUtil;
 import cn.zbx1425.mtrsteamloco.scripting.util.client.GraphicsTexture;
 import cn.zbx1425.sowcerext.util.ResourceUtil;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import mtr.client.ClientData;
 import mtr.mappings.Utilities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.particles.ParticleType;

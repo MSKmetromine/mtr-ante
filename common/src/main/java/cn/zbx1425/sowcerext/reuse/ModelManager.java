@@ -1,5 +1,8 @@
 package cn.zbx1425.sowcerext.reuse;
 
+import cn.zbx1425.mtrsteamloco.model.ModelCache;
+import cn.zbx1425.mtrsteamloco.model.script.ScriptModelAccess;
+import cn.zbx1425.mtrsteamloco.model.script.ScriptModelInstance;
 import cn.zbx1425.sowcer.model.Model;
 import cn.zbx1425.sowcer.model.VertArrays;
 import cn.zbx1425.sowcer.vertex.VertAttrMapping;
@@ -108,7 +111,7 @@ public class ModelManager {
                 throw new IllegalArgumentException("ANIMATED model cannot be loaded as RawModel.");
             default:
                 throw new IllegalArgumentException("Unknown model format: " + resourceManager);
-        };
+        }
         return result;
     }
 
@@ -141,5 +144,4 @@ public class ModelManager {
             return result;
         }
     }
-
 }

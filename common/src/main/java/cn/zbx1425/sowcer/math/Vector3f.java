@@ -82,7 +82,7 @@ public class Vector3f {
         return impl;
     }
 
-    #else
+#else
 
     protected final com.mojang.math.Vector3f impl;
 

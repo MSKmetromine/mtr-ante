@@ -25,26 +25,18 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.client.Minecraft;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.MutableComponent;
-import cn.zbx1425.mtrsteamloco.BuildConfig;
-import cn.zbx1425.mtrsteamloco.scripting.ScriptResourceUtil;
-import cn.zbx1425.sowcerext.reuse.ModelManager;
-import cn.zbx1425.sowcerext.model.RawModel;
+import cn.zbx1425.mtrsteamloco.scripting.util.ScriptResourceUtil;
 import cn.zbx1425.sowcerext.model.RawMesh;
 import cn.zbx1425.sowcerext.model.Vertex;
-import cn.zbx1425.sowcerext.model.integration.RawMeshBuilder;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.mtrsteamloco.data.RelativePosition.*;
 
 import static java.lang.Math.*;
-import java.io.IOException;
+
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.io.ByteArrayInputStream;
-import java.awt.image.BufferedImage;
-import java.io.FileNotFoundException;
 
 public class EyeCandyRegistry {
 

@@ -2,18 +2,10 @@ package cn.zbx1425.mtrsteamloco.data;
 
 import cn.zbx1425.mtrsteamloco.scripting.ScriptHolderBase;
 import cn.zbx1425.sowcerext.model.ModelCluster;
-import cn.zbx1425.sowcerext.model.RawModel;
-import cn.zbx1425.sowcerext.model.RawMesh;
-import cn.zbx1425.sowcerext.model.Vertex;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.client.resources.model.BakedModel;
-import net.minecraft.network.chat.Component;
 import mtr.mappings.Text;
 import cn.zbx1425.sowcer.math.Matrix4f;
-import cn.zbx1425.sowcer.math.Vector3f;
-import static java.lang.Math.*;
-import net.minecraft.resources.ResourceLocation;
-import cn.zbx1425.mtrsteamloco.scripting.ScriptResourceUtil;
 import cn.zbx1425.mtrsteamloco.data.RelativePosition.*;
 
 import java.io.Closeable;

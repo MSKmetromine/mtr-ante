@@ -16,20 +16,22 @@ import net.minecraft.resources.ResourceLocation;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.function.Supplier;
 import cn.zbx1425.sowcer.model.Mesh;
 import java.util.function.Function;
-import java.util.HashSet;
-import java.util.Set;
 
 public class RawModel {
 
     public ResourceLocation sourceLocation;
 
-    public HashMap<MaterialProp, RawMesh> meshList = new HashMap<>();
+    @Deprecated
+    public final HashMap<MaterialProp, RawMesh> meshList = new HashMap<>();
+
+    public Future<?> loadTask;
+    public final List<Runnable> postLoadTasks = new ArrayList<>();
 
     public RawModel() {
 
@@ -43,7 +45,34 @@ public class RawModel {
         }
     }
 
+    public boolean isLoaded() {
+        return this.loadTask == null || this.loadTask.isDone();
+    }
+
+    public void waitForLoad() {
+        if (this.loadTask == null) {
+            return;
+        }
+
+        try {
+            this.loadTask.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void submitPostLoadTask(Runnable runnable) {
+        if (this.loadTask == null || this.loadTask.isDone()) {
+            runnable.run();
+            return;
+        }
+
+        this.postLoadTasks.add(runnable);
+    }
+
     public Model upload(VertAttrMapping mapping) {
+        this.waitForLoad();
+
         Model model = new Model();
         for (RawMesh mesh : meshList.values()) {
             if (mesh.faces.isEmpty()) continue;
@@ -52,7 +81,9 @@ public class RawModel {
         return model;
     }
 
-    public Supplier<Model> uploadAsync(VertAttrMapping mapping) { 
+    public Supplier<Model> uploadAsync(VertAttrMapping mapping) {
+        this.waitForLoad();
+
         Model model = new Model();
         Set<Runnable> uploadTasks = new HashSet<>();
         for (RawMesh mesh : meshList.values()) {
@@ -80,6 +111,8 @@ public class RawModel {
     }
 
     public void appendTransformed(RawModel nextModel, Matrix4f mat, int color, int light) {
+        nextModel.waitForLoad();
+
         for (RawMesh nextMesh : nextModel.meshList.values()) {
             if (meshList.containsKey(nextMesh.materialProp)) {
                 RawMesh mesh = meshList.get(nextMesh.materialProp);
@@ -93,6 +126,10 @@ public class RawModel {
     }
 
     public int getVertexCount() {
+        if (!this.isLoaded()) {
+            return 0;
+        }
+
         int result = 0;
         for (RawMesh mesh : meshList.values()) {
             result += mesh.vertices.size();
@@ -101,6 +138,10 @@ public class RawModel {
     }
 
     public int getFaceCount() {
+        if (!this.isLoaded()) {
+            return 0;
+        }
+
         int result = 0;
         for (RawMesh mesh : meshList.values()) {
             result += mesh.faces.size();
@@ -113,99 +154,132 @@ public class RawModel {
     }
 
     public void append(RawModel nextModel) {
+        nextModel.waitForLoad();
         append(nextModel.meshList.values());
     }
 
     public void applyMatrix(Matrix4f matrix) {
-        for (RawMesh mesh : meshList.values()) mesh.applyMatrix(matrix);
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.applyMatrix(matrix);
+        });
     }
 
     public void applyTranslation(float x, float y, float z) {
-        for (RawMesh mesh : meshList.values()) mesh.applyTranslation(x, y, z);
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.applyTranslation(x, y, z);
+        });
     }
 
     public void applyRotation(Vector3f axis, float angle) {
-        for (RawMesh mesh : meshList.values()) mesh.applyRotation(axis, angle);
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.applyRotation(axis, angle);
+        });
     }
 
     public void applyScale(float x, float y, float z) {
-        for (RawMesh mesh : meshList.values()) mesh.applyScale(x, y, z);
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.applyScale(x, y, z);
+        });
     }
 
     public void applyMirror(boolean vx, boolean vy, boolean vz, boolean nx, boolean ny, boolean nz) {
-        for (RawMesh mesh : meshList.values()) mesh.applyMirror(vx, vy, vz, nx, ny, nz);
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.applyMirror(vx, vy, vz, nx, ny, nz);
+        });
     }
 
     public void applyUVMirror(boolean u, boolean v) {
-        for (RawMesh mesh : meshList.values()) mesh.applyUVMirror(u, v);
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.applyUVMirror(u, v);
+        });
     }
 
     public void generateNormals() {
-        for (RawMesh mesh : meshList.values()) mesh.generateNormals();
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.generateNormals();
+        });
     }
 
     public void distinct() {
-        for (RawMesh mesh : meshList.values()) mesh.distinct();
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.distinct();
+        });
     }
 
     public void triangulate() {
-        for (RawMesh mesh : meshList.values()) mesh.triangulate();
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.triangulate();
+        });
     }
 
     public void applyShear(Vector3f dir, Vector3f shear, float ratio) {
-        for (RawMesh mesh : meshList.values()) mesh.applyShear(dir, shear, ratio);
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) mesh.applyShear(dir, shear, ratio);
+        });
     }
 
     private Map<RawMesh, MaterialProp> originalMaterialProps;
 
     public void setAllRenderType(String renderType) {
-        if (originalMaterialProps == null) {
-            originalMaterialProps = new HashMap<>();
-            for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
-                originalMaterialProps.put(entry.getValue(), entry.getKey().copy());
+        this.submitPostLoadTask(() -> {
+            if (originalMaterialProps == null) {
+                originalMaterialProps = new HashMap<>();
+                for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
+                    originalMaterialProps.put(entry.getValue(), entry.getKey().copy());
+                }
             }
-        }
-        for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
-            if (renderType.equals("reset")) {
-                MaterialProp originalProp = originalMaterialProps.get(entry.getValue());
-                if (originalProp != null) {
-                    entry.getValue().materialProp.copyFrom(originalProp);
-                    entry.getKey().copyFrom(originalProp);
+            for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
+                if (renderType.equals("reset")) {
+                    MaterialProp originalProp = originalMaterialProps.get(entry.getValue());
+                    if (originalProp != null) {
+                        entry.getValue().materialProp.copyFrom(originalProp);
+                        entry.getKey().copyFrom(originalProp);
+                    } else {
+                        entry.getValue().setRenderType(renderType);
+                    }
                 } else {
                     entry.getValue().setRenderType(renderType);
                 }
-            } else {
-                entry.getValue().setRenderType(renderType);
+                entry.getKey().shaderName = entry.getValue().materialProp.shaderName;
             }
-            entry.getKey().shaderName = entry.getValue().materialProp.shaderName;
-        }
+        });
     }
 
     public void replaceTexture(String oldTexture, ResourceLocation newTexture) {
-        for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
-            if (entry.getKey().texture == null) continue;
-            String oldPath = entry.getKey().texture.getPath();
-            if (oldPath.substring(oldPath.lastIndexOf("/") + 1).equals(oldTexture)) {
-                entry.getValue().materialProp.texture = newTexture;
-                entry.getKey().texture = newTexture;
+        this.submitPostLoadTask(() -> {
+            for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
+                if (entry.getKey().texture == null) continue;
+                String oldPath = entry.getKey().texture.getPath();
+                if (oldPath.substring(oldPath.lastIndexOf("/") + 1).equals(oldTexture)) {
+                    entry.getValue().materialProp.texture = newTexture;
+                    entry.getKey().texture = newTexture;
+                }
             }
-        }
+        });
     }
 
     public void replaceAllTexture(ResourceLocation newTexture) {
-        for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
-            entry.getValue().materialProp.texture = newTexture;
-            entry.getKey().texture = newTexture;
-        }
+        this.submitPostLoadTask(() -> {
+            for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
+                entry.getValue().materialProp.texture = newTexture;
+                entry.getKey().texture = newTexture;
+            }
+        });
     }
 
     public void clearAttrState(VertAttrType attrType) {
-        for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
-            entry.getKey().attrState.clearAttr(attrType);
-        }
+        this.submitPostLoadTask(() -> {
+            for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
+                entry.getKey().attrState.clearAttr(attrType);
+            }
+        });
     }
 
     public void writeBlazeBuffer(BufferSourceProxy vertexConsumers, Matrix4f matrix, int light, int overlay, DrawContext drawContext) {
+        if (!this.isLoaded()) {
+            return;
+        }
+
         if (meshList.isEmpty()) return;
         for (Map.Entry<MaterialProp, RawMesh> entry : meshList.entrySet()) {
             RenderType renderType = entry.getKey().getBlazeRenderType();
@@ -213,19 +287,19 @@ public class RawModel {
             int resultLight = entry.getKey().attrState.lightmapUV != null ? entry.getKey().attrState.lightmapUV : light;
             int resultOverlay = entry.getKey().attrState.overlayUV != null ? AttrUtil.exchangeLightmapUVBits(entry.getKey().attrState.overlayUV) : overlay;
 
-            /*
-            if (Objects.equals(entry.getKey().shaderName, "rendertype_entity_translucent_cull") && (resultColor & 0xFF) != 0xFF) {
-                // TEMP WORKAROUND: Depth sorting breaks
-                // ... I totally forgot what I thought about at 7/29, what leaded to "Depth sorting breaks"?
-                continue;
-            }
-            */
+                /*
+                if (Objects.equals(entry.getKey().shaderName, "rendertype_entity_translucent_cull") && (resultColor & 0xFF) != 0xFF) {
+                    // TEMP WORKAROUND: Depth sorting breaks
+                    // ... I totally forgot what I thought about at 7/29, what leaded to "Depth sorting breaks"?
+                    continue;
+                }
+                */
 
             Matrix4f resultMatrix = matrix;
-            /*if (entry.getKey().useMatixProcess()) {
-                resultMatrix = matrix.copy();
-                AttrUtil.zeroRotation(resultMatrix);
-            }*/
+                /*if (entry.getKey().useMatixProcess()) {
+                    resultMatrix = matrix.copy();
+                    AttrUtil.zeroRotation(resultMatrix);
+                }*/
 
             entry.getValue().writeBlazeBuffer(vertexConsumers.getBuffer(renderType, entry.getKey().translucent),
                     resultMatrix, resultColor, resultLight, resultOverlay, drawContext);
@@ -233,6 +307,8 @@ public class RawModel {
     }
 
     public RawModel copy() {
+        this.waitForLoad();
+
         RawModel result = new RawModel();
         result.sourceLocation = this.sourceLocation;
         for (RawMesh mesh : this.meshList.values()) {
@@ -243,6 +319,8 @@ public class RawModel {
     }
 
     public RawModel copyForMaterialChanges() {
+        this.waitForLoad();
+
         RawModel result = new RawModel();
         result.sourceLocation = this.sourceLocation;
         for (RawMesh mesh : this.meshList.values()) {
@@ -253,6 +331,8 @@ public class RawModel {
     }
 
     public void serializeTo(DataOutputStream dos) throws IOException {
+        this.waitForLoad();
+
         dos.writeInt(meshList.size());
         for (RawMesh mesh : meshList.values()) {
             mesh.serializeTo(dos);
@@ -260,8 +340,15 @@ public class RawModel {
     }
 
     public void setMatixProcess(Function<Matrix4f, Matrix4f> matrixProcess) {
-        for (RawMesh mesh : meshList.values()) {
-            mesh.setMatixProcess(matrixProcess);
-        }
+        this.submitPostLoadTask(() -> {
+            for (RawMesh mesh : meshList.values()) {
+                mesh.setMatixProcess(matrixProcess);
+            }
+        });
+    }
+
+    public HashMap<MaterialProp, RawMesh> getMeshList() {
+        this.waitForLoad();
+        return meshList;
     }
 }

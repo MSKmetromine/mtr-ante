@@ -242,7 +242,7 @@ public class EyeCandyRegistry {
             float minx = 0, miny = 0, minz = 0, maxx = 0, maxy = 0, maxz = 0;
             RawModel[] rms = new RawModel[]{itemModelCluster.opaqueParts, itemModelCluster.translucentParts};
             for (RawModel rm : rms) {
-                for (RawMesh mesh : rm.meshList.values()) {
+                for (RawMesh mesh : rm.getMeshList().values()) {
                     for (Vertex vert : mesh.vertices) {
                         Vector3f pos = itemTransform.transform(vert.position);
                         minx = min(minx, pos.x());

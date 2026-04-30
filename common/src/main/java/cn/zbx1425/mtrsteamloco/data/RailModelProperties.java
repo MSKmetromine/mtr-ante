@@ -13,6 +13,7 @@ import cn.zbx1425.mtrsteamloco.scripting.ScriptHolderBase;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class RailModelProperties {
 
@@ -54,8 +55,8 @@ public class RailModelProperties {
         uploadedModel = MainClient.modelManager.uploadModel(rawModel);
 
         float yMin = 0f, yMax = 0f;
-        for (RawMesh mesh : rawModel.meshList.values()) {
-            for (Vertex vertex : mesh.vertices) {
+        for (RawMesh mesh : rawModel.getMeshList().values()) {
+            for (Vertex vertex : new ArrayList<>(mesh.vertices)) {
                 yMin = Math.min(yMin, vertex.position.y() + yOffset);
                 yMax = Math.max(yMax, vertex.position.y() + yOffset);
             }

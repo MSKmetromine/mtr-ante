@@ -75,7 +75,7 @@ public class CapturingVertexConsumer implements VertexConsumer {
             }
         }
         for (int i = 0; i < models.length; i++) {
-            buildingMeshes[i] = models[i].meshList.computeIfAbsent(materialProp, RawMesh::new);
+            buildingMeshes[i] = models[i].getMeshList().computeIfAbsent(materialProp, RawMesh::new);
         }
     }
 

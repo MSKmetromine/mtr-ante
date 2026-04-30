@@ -1,7 +1,6 @@
 package cn.zbx1425.sowcerext.model.loader;
 
 import cn.zbx1425.mtrsteamloco.BuildConfig;
-import cn.zbx1425.mtrsteamloco.model.ModelCache;
 import cn.zbx1425.sowcer.batch.MaterialProp;
 import cn.zbx1425.sowcerext.model.Face;
 import cn.zbx1425.sowcerext.model.RawMesh;
@@ -25,8 +24,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.io.InputStream;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ObjModelLoader {
+    private static final ExecutorService LOAD_EXECUTOR = Executors.newSingleThreadExecutor();
 
     public static RawModel loadModel(InputStream obj, InputStream mtl, ResourceLocation location, AtlasManager atlasManager) throws IOException {
         Obj srcObj = ObjReader.read(obj);
@@ -51,13 +53,35 @@ public class ObjModelLoader {
         return result;
     }
 
-    public static RawModel loadModel(ResourceManager resourceManager, ResourceLocation objLocation, AtlasManager atlasManager) throws IOException {
-        Obj srcObj = ObjReader.read(Utilities.getInputStream(resourceManager.getResource(objLocation)));
-        Map<String, Mtl> materials = loadMaterials(resourceManager, srcObj, objLocation);
+    public static RawModel loadModel(ResourceManager resourceManager, ResourceLocation objLocation, AtlasManager atlasManager) {
+        var result = new RawModel();
+        result.sourceLocation = objLocation;
 
-        RawModel model = loadModel(srcObj, objLocation, materials, atlasManager);
-        model.sourceLocation = objLocation;
-        return model;
+        result.loadTask = LOAD_EXECUTOR.submit(() -> {
+            Obj srcObj;
+            Map<String, Mtl> materials;
+
+            try {
+                srcObj = ObjReader.read(Utilities.getInputStream(resourceManager.getResource(objLocation)));
+                materials = loadMaterials(resourceManager, srcObj, objLocation);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            RawModel model = loadModel(srcObj, objLocation, materials, atlasManager);
+
+            synchronized (result) {
+                result.append(model);
+
+                for (var task : result.postLoadTasks) {
+                    task.run();
+                }
+
+                result.postLoadTasks.clear();
+            }
+        });
+
+        return result;
     }
 
     public static Map<String, RawModel> loadModels(ResourceManager resourceManager, ResourceLocation objLocation, AtlasManager atlasManager) throws IOException {
@@ -66,12 +90,29 @@ public class ObjModelLoader {
         Map<String, Mtl> materials = loadMaterials(resourceManager, srcObj, objLocation);
 
         HashMap<String, RawModel> result = new HashMap<>();
+
         Map<String, Obj> groupObjs = ObjSplitting.splitByGroups(srcObj);
         for (Map.Entry<String, Obj> groupEntry : groupObjs.entrySet()) {
-            RawModel model = loadModel(groupEntry.getValue(), objLocation, materials, atlasManager);
-            String compliantKey = groupEntry.getKey().toLowerCase(Locale.ROOT).replace('\\', '/').replaceAll("[^a-z0-9/._-]", "_");
-            model.sourceLocation = new ResourceLocation(objLocation.getNamespace(), objLocation.getPath() + "/" + compliantKey);
-            result.put(groupEntry.getKey(), model);
+            var part = new RawModel();
+
+            var compliantKey = groupEntry.getKey().toLowerCase(Locale.ROOT).replace('\\', '/').replaceAll("[^a-z0-9/._-]", "_");
+            part.sourceLocation = new ResourceLocation(objLocation.getNamespace(), objLocation.getPath() + "/" + compliantKey);
+
+            part.loadTask = LOAD_EXECUTOR.submit(() -> {
+                var loaded = loadModel(groupEntry.getValue(), objLocation, materials, atlasManager);
+
+                synchronized (part) {
+                    part.append(loaded);
+
+                    for (var task : part.postLoadTasks) {
+                        task.run();
+                    }
+
+                    part.postLoadTasks.clear();
+                }
+            });
+
+            result.put(groupEntry.getKey(), part);
         }
 
         return result;
@@ -210,7 +251,7 @@ public class ObjModelLoader {
             objFile.println("mtllib " + mtlFileName);
             for (Map.Entry<String, RawModel> groupEntry : models.entrySet()) {
                 objFile.println("g " + groupEntry.getKey());
-                for (Map.Entry<MaterialProp, RawMesh> matEntry : groupEntry.getValue().meshList.entrySet()) {
+                for (Map.Entry<MaterialProp, RawMesh> matEntry : groupEntry.getValue().getMeshList().entrySet()) {
                     String textureName = matEntry.getKey().texture == null ? "_"
                             : FilenameUtils.getBaseName(matEntry.getKey().texture.getPath());
                     String renderType;

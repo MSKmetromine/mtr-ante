@@ -51,7 +51,7 @@ public class NmbModelLoader {
         RawModel model = new RawModel(new DataInputStream(new ByteArrayInputStream(dContent)));
         model.sourceLocation = location;
         if (atlasManager != null) {
-            for (RawMesh mesh : model.meshList.values()) {
+            for (RawMesh mesh : model.getMeshList().values()) {
                 atlasManager.applyToMesh(mesh);
             }
         }

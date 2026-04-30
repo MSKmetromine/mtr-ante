@@ -27,6 +27,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
 
 public class ModelManager {
     private final ExecutorService loadExecutor = Executors.newSingleThreadExecutor();
@@ -216,11 +217,21 @@ public class ModelManager {
                         result.uploadedOpaqueParts.meshList.add(meshVertArray);
                     }
 
-                    GlStateTracker.capture();
+                    GlStateTracker.restore();
                 }
 
                 synchronized (this) {
                     vaoCount += uploadedOpaque.meshList.size();
+                }
+
+                synchronized (result) {
+                    for (var task : result.postUploadTasks) {
+                        task.run();
+                    }
+
+                    result.postUploadTasks.clear();
+
+                    result.uploadTask = null;
                 }
             });
         });

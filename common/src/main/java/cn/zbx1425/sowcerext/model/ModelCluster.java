@@ -16,18 +16,21 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 
 public class ModelCluster implements Closeable {
 
-    public final VertArrays uploadedOpaqueParts;
-    public final RawModel opaqueParts;
-    public final VertArrays uploadedTranslucentParts;
-    public final RawModel translucentParts;
+    public VertArrays uploadedOpaqueParts;
+    public RawModel opaqueParts;
+    public VertArrays uploadedTranslucentParts;
+    public RawModel translucentParts;
 
     public Future<?> uploadTask;
+
+    public List<Runnable> postUploadTasks = new ArrayList<>();
 
     public ModelCluster(RawModel source, VertAttrMapping mapping, ModelManager modelManager) {
         this.translucentParts = new RawModel();
@@ -77,16 +80,13 @@ public class ModelCluster implements Closeable {
         this.uploadedOpaqueParts = new VertArrays();
     }
 
-    public void waitForUpload() {
+    private void submitPostUploadTask(Runnable task) {
         if (this.uploadTask == null) {
+            task.run();
             return;
         }
 
-        try {
-            this.uploadTask.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        this.postUploadTasks.add(task);
     }
 
     public void enqueueOpaqueGl(BatchManager batchManager, Matrix4f pose, int light, int overlay, DrawContext drawContext) {
@@ -116,49 +116,59 @@ public class ModelCluster implements Closeable {
     }
 
     public void setMatixProcess(Function<Matrix4f, Matrix4f> matrixProcess) {
-        this.waitForUpload();
-
-        opaqueParts.setMatixProcess(matrixProcess);
-        translucentParts.setMatixProcess(matrixProcess);
-        uploadedOpaqueParts.setMatixProcess(matrixProcess);
-        uploadedTranslucentParts.setMatixProcess(matrixProcess);
+        this.submitPostUploadTask(() -> {
+            opaqueParts.setMatixProcess(matrixProcess);
+            translucentParts.setMatixProcess(matrixProcess);
+            uploadedOpaqueParts.setMatixProcess(matrixProcess);
+            uploadedTranslucentParts.setMatixProcess(matrixProcess);
+        });
     }
 
     @Override
     public void close() {
-        this.waitForUpload();
-
-        uploadedOpaqueParts.close();
-        uploadedTranslucentParts.close();
+        this.submitPostUploadTask(() -> {
+            uploadedOpaqueParts.close();
+            uploadedTranslucentParts.close();
+        });
     }
 
 
     public void replaceTexture(String oldTexture, ResourceLocation newTexture) {
-        this.waitForUpload();
-
-        uploadedOpaqueParts.replaceTexture(oldTexture, newTexture);
-        opaqueParts.replaceTexture(oldTexture, newTexture);
-        uploadedTranslucentParts.replaceTexture(oldTexture, newTexture);
-        translucentParts.replaceTexture(oldTexture, newTexture);
+        this.submitPostUploadTask(() -> {
+            uploadedOpaqueParts.replaceTexture(oldTexture, newTexture);
+            opaqueParts.replaceTexture(oldTexture, newTexture);
+            uploadedTranslucentParts.replaceTexture(oldTexture, newTexture);
+            translucentParts.replaceTexture(oldTexture, newTexture);
+        });
     }
 
     public void replaceAllTexture(ResourceLocation newTexture) {
-        this.waitForUpload();
-
-        uploadedOpaqueParts.replaceAllTexture(newTexture);
-        opaqueParts.replaceAllTexture(newTexture);
-        uploadedTranslucentParts.replaceAllTexture(newTexture);
-        translucentParts.replaceAllTexture(newTexture);
+        this.submitPostUploadTask(() -> {
+            uploadedOpaqueParts.replaceAllTexture(newTexture);
+            opaqueParts.replaceAllTexture(newTexture);
+            uploadedTranslucentParts.replaceAllTexture(newTexture);
+            translucentParts.replaceAllTexture(newTexture);
+        });
     }
 
     public ModelCluster copyForMaterialChanges() {
-        this.waitForUpload();
+        var cluster = new ModelCluster();
 
-        return new ModelCluster(
-                uploadedOpaqueParts.copyForMaterialChanges(),
-                opaqueParts.copyForMaterialChanges(),
-                uploadedTranslucentParts.copyForMaterialChanges(),
-                translucentParts.copyForMaterialChanges()
-        );
+        cluster.uploadTask = this.uploadTask;
+
+        this.submitPostUploadTask(() -> {
+            cluster.uploadedOpaqueParts = this.uploadedOpaqueParts.copyForMaterialChanges();
+            cluster.opaqueParts = this.opaqueParts.copyForMaterialChanges();
+            cluster.uploadedTranslucentParts = this.uploadedTranslucentParts.copyForMaterialChanges();
+            cluster.translucentParts = this.translucentParts.copyForMaterialChanges();
+
+            for (var task : cluster.postUploadTasks) {
+                task.run();
+            }
+
+            cluster.postUploadTasks.clear();
+        });
+
+        return cluster;
     }
 }

@@ -137,6 +137,7 @@ public class ObjModelLoader {
 
     private static RawModel loadModel(Obj srcObj, ResourceLocation objLocation, Map<String, Mtl> materials, AtlasManager atlasManager) {
         Map<String, Obj> mtlObjs = ObjSplitting.splitByMaterialGroups(srcObj);
+
         RawModel model = new RawModel();
         for (Map.Entry<String, Obj> entry : mtlObjs.entrySet()) {
             if (entry.getValue().getNumFaces() == 0) continue;

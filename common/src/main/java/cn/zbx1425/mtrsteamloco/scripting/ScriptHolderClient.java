@@ -140,11 +140,4 @@ public class ScriptHolderClient extends ScriptHolderBase {
             // Main.LOGGER.warn("MadParticle", ignored);
         }*/
     }
-
-    @Override
-    protected void loadImpl(String name, String contextTypeName, ResourceManager resourceManager, Map<ResourceLocation, String> scripts, JsonObject config, String key, String... functionNames) throws Exception {
-        GlStateTracker.capture();
-        super.loadImpl(name, contextTypeName, resourceManager, scripts, config, key, functionNames);
-        GlStateTracker.restore();
-    }
 }

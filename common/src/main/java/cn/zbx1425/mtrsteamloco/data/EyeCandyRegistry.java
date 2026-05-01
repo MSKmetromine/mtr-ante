@@ -213,8 +213,7 @@ public class EyeCandyRegistry {
 
             cluster = MainClient.modelManager.uploadVertArrays(rawModel);
         }
-        ModelCluster itemModelCluster = null;
-        Matrix4f itemTransform = null;
+        final ModelCluster itemModelCluster;
         BakedModel itemBakedModel = null;
         if (obj.has("itemModel")) {
             String path = obj.get("itemModel").getAsString();
@@ -223,6 +222,7 @@ public class EyeCandyRegistry {
             if (path.endsWith(".png")) {
                 loc = mappingItem(loc);
                 itemBakedModel = Minecraft.getInstance().getModelManager().getModel(new ModelResourceLocation(loc, "inventory"));
+                itemModelCluster = null;
             } else if (parts[parts.length - 1].contains(".")) {
                 RawModel rawModel = MainClient.modelManager.loadRawModel(resourceManager,
                     loc, MainClient.atlasManager).copy();
@@ -231,35 +231,38 @@ public class EyeCandyRegistry {
             }
             else {
                 itemBakedModel = Minecraft.getInstance().getModelManager().getModel(new ModelResourceLocation(loc, "inventory"));
+                itemModelCluster = null;
             };
 
         } else {
             itemModelCluster = cluster;
         }
+        var itemTransform = new Matrix4f();
         if (itemModelCluster != null) {
-            itemTransform = new Matrix4f();
-            itemTransform.rotateY((float) toRadians(-30));
-            float minx = 0, miny = 0, minz = 0, maxx = 0, maxy = 0, maxz = 0;
-            RawModel[] rms = new RawModel[]{itemModelCluster.opaqueParts, itemModelCluster.translucentParts};
-            for (RawModel rm : rms) {
-                for (RawMesh mesh : rm.getMeshList().values()) {
-                    for (Vertex vert : new ArrayList<>(mesh.vertices)) {
-                        Vector3f pos = itemTransform.transform(vert.position);
-                        minx = min(minx, pos.x());
-                        maxx = max(maxx, pos.x());
-                        miny = min(miny, pos.y());
-                        maxy = max(maxy, pos.y());
+            itemModelCluster.submitPostUploadTask(() -> {
+                itemTransform.rotateY((float) toRadians(-30));
+                float minx = 0, miny = 0, minz = 0, maxx = 0, maxy = 0, maxz = 0;
+                RawModel[] rms = new RawModel[]{itemModelCluster.opaqueParts, itemModelCluster.translucentParts};
+                for (RawModel rm : rms) {
+                    for (RawMesh mesh : rm.getMeshList().values()) {
+                        for (Vertex vert : new ArrayList<>(mesh.vertices)) {
+                            Vector3f pos = itemTransform.transform(vert.position);
+                            minx = min(minx, pos.x());
+                            maxx = max(maxx, pos.x());
+                            miny = min(miny, pos.y());
+                            maxy = max(maxy, pos.y());
 
-                        minz = min(minz, pos.z());
-                        maxz = max(maxz, pos.z());
+                            minz = min(minz, pos.z());
+                            maxz = max(maxz, pos.z());
+                        }
                     }
                 }
-            }
-            miny = min(miny, 0);
-            float xm = max(abs(minx), abs(maxx)), ym = maxy - miny, zm = max(abs(minz), abs(maxz));
-            float f1 = 0.5f / max(0.5f, max(xm, zm)), f2 = 1f / max(1, ym);
-            itemTransform.scale(min(f1, f2));
-            itemTransform.translate(0, -miny, 0);
+                miny = min(miny, 0);
+                float xm = max(abs(minx), abs(maxx)), ym = maxy - miny, zm = max(abs(minz), abs(maxz));
+                float f1 = 0.5f / max(0.5f, max(xm, zm)), f2 = 1f / max(1, ym);
+                itemTransform.scale(min(f1, f2));
+                itemTransform.translate(0, -miny, 0);
+            });
         }   
 
         ScriptHolderBase script = null;

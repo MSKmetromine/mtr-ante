@@ -80,7 +80,7 @@ public class ModelCluster implements Closeable {
         this.uploadedOpaqueParts = new VertArrays();
     }
 
-    private void submitPostUploadTask(Runnable task) {
+    public void submitPostUploadTask(Runnable task) {
         if (this.uploadTask == null) {
             task.run();
             return;

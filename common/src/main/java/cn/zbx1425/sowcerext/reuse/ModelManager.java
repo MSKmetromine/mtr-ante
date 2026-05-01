@@ -51,15 +51,18 @@ public class ModelManager {
 
     public void clear() {
         vaoCount = 0;
+        vboCount = 0;
+
         for (ModelCluster vertArrays : uploadedVertArrays.values()) {
             vertArrays.close();
         }
         uploadedVertArrays.clear();
-        vboCount = 0;
+
         for (Model model : uploadedModels.values()) {
             model.close();
         }
         uploadedModels.clear();
+
         loadedRawModels.clear();
     }
 
@@ -70,57 +73,45 @@ public class ModelManager {
                     vaoCount -= k.getValue().uploadedOpaqueParts == null ? 0 : k.getValue().uploadedOpaqueParts.meshList.size();
                     k.getValue().close();
                 });
+
         uploadedVertArrays.keySet().removeIf(k -> k.getNamespace().equals(namespace));
+
         uploadedModels.entrySet().stream()
                 .filter(k -> k.getKey().getNamespace().equals(namespace))
                 .forEach(k -> {
                     vboCount -= k.getValue().meshList.size();
                     k.getValue().close();
                 });
+
         uploadedModels.keySet().removeIf(k -> k.getNamespace().equals(namespace));
+
         loadedRawModels.keySet().removeIf(k -> k.getNamespace().equals(namespace));
     }
 
     public RawModel loadRawModel(ResourceManager resourceManager, ResourceLocation objLocation, AtlasManager atlasManager) throws IOException {
-        if (loadedRawModels.containsKey(objLocation)) return loadedRawModels.get(objLocation);
-        String crntStatExt = FilenameUtils.getExtension(objLocation.getPath());
-        RawModel result;
-        switch (crntStatExt) {
-            case "obj":
-                result = ObjModelLoader.loadModel(resourceManager, objLocation, atlasManager);
-                break;
-            case "csv":
-                result = CsvModelLoader.loadModel(resourceManager, objLocation, atlasManager);
-                break;
-            case "nmb":
-                result = NmbModelLoader.loadModel(resourceManager, objLocation, atlasManager);
-                // result = CsvModelLoader.loadModel(resourceManager, new ResourceLocation(objLocation.toString().replace(".nmb", ".csv")), atlasManager);
-                break;
-            case "animated":
-                throw new IllegalArgumentException("ANIMATED model cannot be loaded as RawModel.");
-            default:
-                throw new IllegalArgumentException("Unknown model format: " + resourceManager);
+        var existing = loadedRawModels.get(objLocation);
+
+        if (existing != null) {
+            return existing;
+        }
+
+        var fileType = FilenameUtils.getExtension(objLocation.getPath());
+
+        return switch (fileType) {
+            case "obj" -> ObjModelLoader.loadModel(resourceManager, objLocation, atlasManager);
+            case "csv" -> CsvModelLoader.loadModel(resourceManager, objLocation, atlasManager);
+            case "nmb" -> NmbModelLoader.loadModel(resourceManager, objLocation, atlasManager);
+            default -> throw new IllegalArgumentException("Model cannot be loaded as a raw model: " + objLocation);
         };
-        loadedRawModels.put(objLocation, result);
-        return result;
     }
 
     public Map<String, RawModel> loadPartedRawModel(ResourceManager resourceManager, ResourceLocation objLocation, AtlasManager atlasManager) throws IOException {
-        String crntStatExt = FilenameUtils.getExtension(objLocation.getPath());
-        Map<String, RawModel> result;
-        switch (crntStatExt) {
-            case "obj":
-                result = ObjModelLoader.loadModels(resourceManager, objLocation, atlasManager);
-                break;
-            case "csv":
-            case "nmb":
-                throw new IllegalArgumentException("CSV/NMB model cannot be loaded as parted RawModel.");
-            case "animated":
-                throw new IllegalArgumentException("ANIMATED model cannot be loaded as RawModel.");
-            default:
-                throw new IllegalArgumentException("Unknown model format: " + resourceManager);
-        }
-        return result;
+        String fileType = FilenameUtils.getExtension(objLocation.getPath());
+
+        return switch (fileType) {
+            case "obj" -> ObjModelLoader.loadModels(resourceManager, objLocation, atlasManager);
+            default -> throw new IllegalArgumentException("Model cannot be loaded as a parted raw model: " + resourceManager);
+        };
     }
 
     public Model uploadModel(RawModel rawModel) {

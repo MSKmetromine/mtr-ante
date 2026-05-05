@@ -143,7 +143,7 @@ public class Vector3d {
     }
 
     public BlockPos toBlockPos() {
-        return new BlockPos(this.impl);
+        return new BlockPos(this.x(), this.y(), this.z());
     }
 
     public Vec3 toVec3() {

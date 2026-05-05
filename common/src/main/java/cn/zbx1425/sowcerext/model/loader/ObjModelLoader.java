@@ -36,7 +36,7 @@ public class ObjModelLoader {
 
         for (String mtlFileName : srcObj.getMtlFileNames()) {
             var location = ResourceUtil.resolveRelativePath(objLocation, mtlFileName, ".mtl");
-            var stream = resourceManager.getResource(location).getInputStream();
+            var stream = Utilities.getInputStream(resourceManager.getResource(location));
             var newMaterials = loadMaterials(stream);
 
             materials.putAll(newMaterials);

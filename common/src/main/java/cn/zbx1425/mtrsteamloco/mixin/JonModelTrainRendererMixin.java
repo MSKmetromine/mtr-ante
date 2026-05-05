@@ -55,7 +55,7 @@ public abstract class JonModelTrainRendererMixin extends TrainRendererBase{
     }
 
     // Camera relative patches
-    @Redirect(method = "renderCar", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V", ordinal = 0))
+    @Redirect(method = "renderCar", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V", ordinal = 0), remap = true)
     private void renderCarTranslate(PoseStack instance, double x, double y, double z) {
         if (this.train.getViewOffset() != null) {
             instance.translate(x, y, z);
@@ -66,7 +66,7 @@ public abstract class JonModelTrainRendererMixin extends TrainRendererBase{
         instance.translate(x - cameraPos.x(), y - cameraPos.y(), z - cameraPos.z());
     }
 
-    @Redirect(method = "drawTexture", at = @At(value = "INVOKE", target = "Lmtr/client/IDrawing;drawTexture(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;FFFFFFFFFFFFFFFFLnet/minecraft/core/Direction;II)V"))
+    @Redirect(method = "drawTexture", at = @At(value = "INVOKE", target = "Lmtr/client/IDrawing;drawTexture(Lcom/mojang/blaze3d/vertex/PoseStack;Lcom/mojang/blaze3d/vertex/VertexConsumer;FFFFFFFFFFFFFFFFLnet/minecraft/core/Direction;II)V"), remap = true)
     private static void drawTexture(
             PoseStack matrices, VertexConsumer vertexConsumer,
             float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4, float u1, float v1, float u2, float v2, Direction facing, int color, int light,
@@ -104,7 +104,7 @@ public abstract class JonModelTrainRendererMixin extends TrainRendererBase{
         );
     }
 
-    @Redirect(method = "renderConnection", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"))
+    @Redirect(method = "renderConnection", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V"), remap = true)
     public void renderConnectionTranslate(PoseStack instance, double x, double y, double z) {
         if (this.train.getViewOffset() != null) {
             instance.translate(x, y, z);

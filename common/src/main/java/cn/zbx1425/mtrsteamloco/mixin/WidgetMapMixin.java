@@ -25,7 +25,7 @@ public class WidgetMapMixin {
     @Unique
     private static double mtrSteamLoco$bottom;
 
-    @Inject(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;getX()I", ordinal = 0))
+    @Inject(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lnet/minecraft/core/BlockPos;getX()I", ordinal = 0), remap = true)
     private static void mouseOnSavedRailPre(CallbackInfo ci, @Local(name = "savedRailCount") int savedRailCount, @Local(name = "i") int i, @Local(name = "savedRailPos") BlockPos savedRailPos) {
         mtrSteamLoco$left = savedRailPos.getX();
         mtrSteamLoco$right = savedRailPos.getX() + 1;

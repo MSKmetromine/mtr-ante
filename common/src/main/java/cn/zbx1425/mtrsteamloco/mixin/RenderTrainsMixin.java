@@ -223,7 +223,7 @@ public class RenderTrainsMixin extends EntityRendererMapper<EntitySeat> implemen
     }
 
     // Camera relative patches
-    @Redirect(method = "lambda$render$5", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V", ordinal = 0), remap = false)
+    @Redirect(method = "lambda$render$5", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/vertex/PoseStack;translate(DDD)V", ordinal = 0))
     private static void renderLiftTranslate(PoseStack instance, double x, double y, double z, LiftClient lift) {
         if (lift.getViewOffset() != null) {
             instance.translate(x, y, z);

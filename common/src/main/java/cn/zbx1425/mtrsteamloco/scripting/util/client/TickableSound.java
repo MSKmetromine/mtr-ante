@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import cn.zbx1425.sowcer.math.Vector3f;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.Vector4d;
 
 public class TickableSound extends TickableSoundInstanceMapper {
     public TickableSound(ResourceLocation sound) {
@@ -39,6 +40,15 @@ public class TickableSound extends TickableSoundInstanceMapper {
 		y = pos.y();
 		z = pos.z();
 	}
+
+    public void setData(float volume, float pitch, Vector4d pos) {
+        this.pitch = pitch;
+        this.volume = volume;
+
+        x = pos.x();
+        y = pos.y();
+        z = pos.z();
+    }
 
     public void setLooping(boolean looping) {
         this.looping = looping;

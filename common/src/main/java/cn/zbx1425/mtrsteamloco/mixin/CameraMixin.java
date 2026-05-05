@@ -54,10 +54,11 @@ public abstract class CameraMixin {
     )
     private void injectSetup(BlockGetter p_90576_, Entity p_90577_, boolean p_90578_, boolean p_90579_, float p_90580_, CallbackInfo ci) {
         float eyeHeight = (float) Mth.lerp(p_90580_, this.eyeHeightOld, this.eyeHeight);
-        
-        Vector3f pos = new Vector3f(getPosition());
-        pos = Rolling.applyRolling(pos, eyeHeight);
-        setPosition(pos.toVec3());
+
+        var pos = getPosition();
+        pos.add(Rolling.applyRolling(Vector3f.ZERO, eyeHeight).toVec3());
+        setPosition(pos);
+
         roll = Rolling.getRollQuaternion().asMoj();
     }
 

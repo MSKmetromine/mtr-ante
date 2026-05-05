@@ -6,6 +6,7 @@ import cn.zbx1425.mtrsteamloco.scripting.ScriptContextManager;
 import cn.zbx1425.mtrsteamloco.scripting.ScriptHolderBase;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.sowcer.math.PoseStackUtil;
+import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
 import mtr.client.ClientData;
 import mtr.data.TrainClient;
@@ -63,6 +64,8 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
 
         if (isTranslucentBatch) return;
 
+        var cameraPos = camera.getPosition();
+
         final BlockPos posAverage = applyAverageTransform(train.getViewOffset(), x, y, z);
 
         final boolean hasPitch = pitch < 0 ? train.transportMode.hasPitchAscending : train.transportMode.hasPitchDescending;
@@ -73,7 +76,12 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
 
         Matrix4f carPose = new Matrix4f();
 
-        carPose.translate((float) x, (float) y, (float) z);
+        if (train.getViewOffset() == null) {
+            carPose.translate((float) (x - cameraPos.x()), (float) (y - cameraPos.y()), (float) (z - cameraPos.z()));
+        } else {
+            carPose.translate((float) x, (float) y, (float) z);
+        }
+
         Vec3 offset = train.vehicleRidingClient.getVehicleOffset();
         if (offset != null) {
             carPose.translate((float) offset.x, (float) offset.y, (float) offset.z);
@@ -90,7 +98,7 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
         trainExtra.doorLeftOpen[carIndex] = doorLeftOpen;
         trainExtra.doorRightOpen[carIndex] = doorRightOpen;
         trainExtra.lastWorldPose[carIndex] = copy.copy();
-        trainExtra.lastCarPosition[carIndex] = copy.getTranslationPart();
+        trainExtra.lastCarPosition[carIndex] = new Vector3d(x, y, z);
         trainExtra.lastCarRotation[carIndex] = new Vector3f(hasPitch ? pitch : 0.0, (float) Math.PI + yaw, isReversed ? -roll : roll);
         trainExtra.shouldRender = shouldRender;
         trainExtra.isInDetailDistance = true;// (posAverage != null && posAverage.distSqr(camera.getBlockPosition()) <= RenderTrains.DETAIL_RADIUS_SQUARED);
@@ -109,14 +117,24 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
         
         if (shouldRender) {
             Matrix4f basePose = worldPose.copy();
-            basePose.translate((float) x, (float) y, (float) z);
+
+            if (train.getViewOffset() == null) {
+                basePose.translate((float) (x - cameraPos.x()), (float) (y - cameraPos.y()), (float) (z - cameraPos.z()));
+            } else {
+                basePose.translate((float) x, (float) y, (float) z);
+            }
+
             basePose.rotateY((float) Math.PI + yaw);
             basePose.rotateX(hasPitch ? pitch : 0);
             basePose.translate(0, -1, 0);
             basePose.rotateZ(isReversed? -roll : roll);
             basePose.translate(0, 1, 0);
+
+            var soundPose = basePose.copy();
+            soundPose.translate((float) cameraPos.x(), (float) cameraPos.y(), (float) cameraPos.z());
+
             synchronized (trainScripting) {
-                trainScripting.commitCar(carIndex, MainClient.drawScheduler, basePose, worldPose, light, carPose);
+                trainScripting.commitCar(carIndex, MainClient.drawScheduler, basePose, worldPose, light, soundPose);
             }
         }
 
@@ -143,7 +161,15 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
         if (posAverage == null) return;
         Matrix4f worldPose = new Matrix4f(matrices.last().pose()).copy();
         matrices.pushPose();
-        matrices.translate(x, y, z);
+
+        var cameraPos = camera.getPosition();
+
+        if (train.getViewOffset() == null) {
+            matrices.translate((float) (x - cameraPos.x()), (float) (y - cameraPos.y()), (float) (z - cameraPos.z()));
+        } else {
+            matrices.translate((float) x, (float) y, (float) z);
+        }
+
         PoseStackUtil.rotY(matrices, (float) Math.PI + yaw);
         final boolean hasPitch = pitch < 0 ? train.transportMode.hasPitchAscending : train.transportMode.hasPitchDescending;
         PoseStackUtil.rotX(matrices, hasPitch ? pitch : 0);

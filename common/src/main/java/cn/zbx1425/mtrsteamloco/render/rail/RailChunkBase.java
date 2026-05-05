@@ -89,4 +89,13 @@ public abstract class RailChunkBase implements Closeable {
     public void close() {
 
     }
+
+    public Vec3 getChunkOrigin() {
+        var chunkPos = this.getChunkPos();
+        return new Vec3(
+                chunkPos.getMinBlockX(),
+                0.0,
+                chunkPos.getMinBlockZ()
+        );
+    }
 }

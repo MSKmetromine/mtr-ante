@@ -309,11 +309,15 @@ public class BlockEyeCandy extends BlockDirectionalMapper implements EntityBlock
             compoundTag.putBoolean("isEntrance", isEntrance);
         }
 
-        public Matrix4f getBaseMatrix() {
+        public Matrix4f getBaseMatrix(Vec3 origin) {
             final Direction facing = IBlock.getStatePropertySafe(getBlockState(), FACING);
             final Matrix4f matrix = new Matrix4f();
             BlockPos pos = getWorldPos();
-            matrix.translate(pos.getX() + 0.5F + translateX, pos.getY() + translateY, pos.getZ() + 0.5F + translateZ);
+            matrix.translate(
+                    (float) (pos.getX() - origin.x() + 0.5F + translateX),
+                    (float) (pos.getY() - origin.y() + translateY),
+                    (float) (pos.getZ() - origin.z() + 0.5F + translateZ)
+            );
             matrix.rotateY((float) Math.toRadians(180F - facing.toYRot()));
             matrix.rotateX(rotateX);
             matrix.rotateY(rotateY);

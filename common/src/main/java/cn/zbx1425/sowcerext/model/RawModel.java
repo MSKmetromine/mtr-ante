@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 import cn.zbx1425.sowcer.model.Mesh;
 import java.util.function.Function;
@@ -55,8 +57,8 @@ public class RawModel {
         }
 
         try {
-            this.loadTask.get();
-        } catch (InterruptedException | ExecutionException e) {
+            this.loadTask.get(60L, TimeUnit.SECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
             throw new RuntimeException(e);
         }
     }

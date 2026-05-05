@@ -4,6 +4,7 @@ import cn.zbx1425.mtrsteamloco.mixin.TrainAccessor;
 import cn.zbx1425.mtrsteamloco.util.PositionRotation;
 import cn.zbx1425.mtrsteamloco.util.ScriptPositionRotation;
 import cn.zbx1425.sowcer.math.Matrix4f;
+import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
 import mtr.MTRClient;
 import mtr.client.ClientData;
@@ -40,7 +41,7 @@ public class TrainWrapper {
     public boolean[] doorRightOpen;
 
     public Matrix4f[] lastWorldPose;
-    public Vector3f[] lastCarPosition;
+    public Vector3d[] lastCarPosition;
     public Vector3f[] lastCarRotation;
 
     public boolean shouldRender;
@@ -57,10 +58,10 @@ public class TrainWrapper {
         doorLeftOpen = new boolean[train.trainCars];
         doorRightOpen = new boolean[train.trainCars];
         lastWorldPose = new Matrix4f[train.trainCars];
-        lastCarPosition = new Vector3f[train.trainCars];
+        lastCarPosition = new Vector3d[train.trainCars];
         lastCarRotation = new Vector3f[train.trainCars];
         Arrays.setAll(lastWorldPose, ignored -> Matrix4f.translation(0, -10000, 0));
-        Arrays.setAll(lastCarPosition, ignored -> new Vector3f(0, -10000, 0));
+        Arrays.setAll(lastCarPosition, ignored -> new Vector3d(0, -10000, 0));
         Arrays.setAll(lastCarRotation, ignored -> new Vector3f(0, 0, 0));
         this.train = train;
         supplier = (TrainExtraSupplier) train;

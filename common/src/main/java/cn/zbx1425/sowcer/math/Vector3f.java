@@ -164,6 +164,10 @@ public class Vector3f {
         this((float)x, (float)y, (float)z);
     }
 
+    public Vector3f(Vector3d other) {
+        this(other.x(), other.y(), other.z());
+    }
+
     @Override
     public int hashCode() {
         return impl.hashCode();

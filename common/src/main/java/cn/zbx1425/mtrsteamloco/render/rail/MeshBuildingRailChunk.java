@@ -13,6 +13,7 @@ import cn.zbx1425.sowcer.vertex.VertAttrSrc;
 import cn.zbx1425.sowcer.vertex.VertAttrState;
 import cn.zbx1425.sowcer.vertex.VertAttrType;
 import cn.zbx1425.sowcerext.model.RawModel;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.BlockPos;
@@ -20,6 +21,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import cn.zbx1425.sowcerext.reuse.DrawScheduler;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -77,8 +79,23 @@ public class MeshBuildingRailChunk extends RailChunkBase {
     public void enqueue(BatchManager batchManager, ShaderProp shaderProp) {
         if (railModel == null) return;
 
+        var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+        var chunkPos = this.getChunkPos();
+        var chunkOrigin = new Vec3(
+                chunkPos.getMinBlockX(),
+                0.0,
+                chunkPos.getMinBlockZ()
+        );
+
+        var chunkMatrix = shaderProp.viewMatrix.copy();
+        chunkMatrix.translate(
+                (float) (chunkOrigin.x() - cameraPos.x()),
+                (float) (chunkOrigin.y() - cameraPos.y()),
+                (float) (chunkOrigin.z() - cameraPos.z())
+        );
+
         if (vertArrays == null) return;
-        VertAttrState attrState = new VertAttrState().setModelMatrix(shaderProp.viewMatrix).setOverlayUVNoOverlay();
+        VertAttrState attrState = new VertAttrState().setModelMatrix(chunkMatrix).setOverlayUVNoOverlay();
         if (!RailRenderDispatcher.isHoldingRailItem) attrState.setColor(-1);
         batchManager.enqueue(vertArrays, new EnqueueProp(attrState), ShaderProp.DEFAULT);
     }

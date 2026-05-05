@@ -30,6 +30,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.AABB;
 import cn.zbx1425.mtrsteamloco.data.RailModelProperties;
 import cn.zbx1425.mtrsteamloco.gui.DirectNodeScreen;
 import cn.zbx1425.mtrsteamloco.Main;
@@ -202,14 +203,19 @@ public class RailRenderDispatcher {
     }
 
     public void drawRailNodes(Level level, DrawScheduler drawScheduler, Matrix4f viewMatrix) {
+        var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+
         if (isHoldingRailItemOrBrush) {
             HashSet<BlockPos> drawnNodes = new HashSet<>();
             for (Map.Entry<BlockPos, Map<BlockPos, Rail>> entryStart : ClientData.RAILS.entrySet()) {
                 for (Map.Entry<BlockPos, Rail> entryEnd : entryStart.getValue().entrySet()) {
                     if (drawnNodes.add(entryStart.getKey())) {
                         Matrix4f nodePose = viewMatrix.copy();
-                        nodePose.translate(entryStart.getKey().getX() + 0.5f,
-                                entryStart.getKey().getY(), entryStart.getKey().getZ() + 0.5f);
+                        nodePose.translate(
+                                (float) (entryStart.getKey().getX() - cameraPos.x()) + 0.5f,
+                                (float) (entryStart.getKey().getY() - cameraPos.y()),
+                                (float) (entryStart.getKey().getZ() - cameraPos.z()) + 0.5f
+                        );
                         nodePose.rotateY(-(float) entryEnd.getValue().facingStart.angleRadians + (float) Math.PI / 2);
                         final int light = LightTexture.pack(level.getBrightness(LightLayer.BLOCK, entryStart.getKey()),
                                 level.getBrightness(LightLayer.SKY, entryStart.getKey()));
@@ -217,8 +223,11 @@ public class RailRenderDispatcher {
                     }
                     if (drawnNodes.add(entryEnd.getKey())) {
                         Matrix4f nodePose = viewMatrix.copy();
-                        nodePose.translate(entryEnd.getKey().getX() + 0.5f,
-                                entryEnd.getKey().getY(), entryEnd.getKey().getZ() + 0.5f);
+                        nodePose.translate(
+                                (float) (entryEnd.getKey().getX() - cameraPos.x()) + 0.5f,
+                                (float) (entryEnd.getKey().getY() - cameraPos.y()),
+                                (float) (entryEnd.getKey().getZ() - cameraPos.z()) + 0.5f
+                        );
                         nodePose.rotateY(-(float) entryEnd.getValue().facingEnd.angleRadians + (float) Math.PI / 2);
                         final int light = LightTexture.pack(level.getBrightness(LightLayer.BLOCK, entryEnd.getKey()),
                                 level.getBrightness(LightLayer.SKY, entryEnd.getKey()));
@@ -252,16 +261,20 @@ public class RailRenderDispatcher {
     }
 
     public void drawBoundingBoxes(PoseStack matrixStack, VertexConsumer buffer) {
+        var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+
         for (RailChunkBase chunk : railChunkList) {
             boolean isChunkEven = chunk.isEven();
-            LevelRenderer.renderLineBox(matrixStack, buffer, chunk.boundingBox,
+            LevelRenderer.renderLineBox(matrixStack, buffer, chunk.boundingBox.move(cameraPos.scale(-1.0)),
                     1.0f, isChunkEven ? 1.0f : 0.0f, isChunkEven ? 0.0f : 1.0f, 1.0f);
 #if DEBUG
             for (ArrayList<Matrix4f> rail : chunk.containingRails.values()) {
+                var origin = chunk.getChunkOrigin();
+
                 for (Matrix4f pieceMat : rail) {
-                    final Vector3f lightPos = pieceMat.getTranslationPart();
+                    var lightPos = origin.add(pieceMat.getTranslationPart().toVec3());
                     final BlockPos lightBlockPos = new BlockPos(lightPos.x(), lightPos.y() + 0.1, lightPos.z());
-                    LevelRenderer.renderLineBox(matrixStack, buffer, new AABB(lightBlockPos),
+                    LevelRenderer.renderLineBox(matrixStack, buffer, new AABB(lightBlockPos).move(cameraPos.scale(-1.0)),
                             1.0f, isChunkEven ? 1.0f : 0.0f, isChunkEven ? 0.0f : 1.0f, 1.0f);
                 }
             }

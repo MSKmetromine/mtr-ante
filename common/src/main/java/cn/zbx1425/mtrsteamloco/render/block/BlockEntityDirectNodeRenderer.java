@@ -114,9 +114,15 @@ public class BlockEntityDirectNodeRenderer extends BlockEntityRendererMapper<Blo
 
             int light = LevelRenderer.getLightColor(world, blockEntity.getBlockPos());;
 
+            var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+
             Matrix4f basePose = worldPose.copy();
             final BlockPos pos = blockEntity.getBlockPos();
-            basePose.translate(pos.getX() + 0.5F, pos.getY() + 0.5F, pos.getZ() + 0.5F);
+            basePose.translate(
+                    (float) (pos.getX() - cameraPos.x()) + 0.5F,
+                    (float) (pos.getY() - cameraPos.y()) + 0.5F,
+                    (float) (pos.getZ() - cameraPos.z()) + 0.5F
+            );
 
             RailAngle railAngle = blockEntity.getRailAngle();
             if (railAngle == null) {

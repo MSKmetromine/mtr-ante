@@ -82,10 +82,14 @@ public class RailPicker {
         }
         
 
-         
+        var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
 
         matrices.pushPose();
-        matrices.translate(pickedPosStart.getX(), pickedPosStart.getY(), pickedPosStart.getZ());
+        matrices.translate(
+                pickedPosStart.getX() - cameraPos.x(),
+                pickedPosStart.getY() - cameraPos.y(),
+                pickedPosStart.getZ() - cameraPos.z()
+        );
         matrices.translate(0.5, 0.5, 0.5);
         matrices.mulPose(Minecraft.getInstance().gameRenderer.getMainCamera().rotation());
         matrices.scale(-0.025F, -0.025F, 0.025F);

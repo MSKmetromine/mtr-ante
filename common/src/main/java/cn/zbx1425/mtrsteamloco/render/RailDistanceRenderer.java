@@ -75,7 +75,7 @@ public class RailDistanceRenderer {
         final float roll = RailExtraSupplier.getRollAngle(rail, i);
 
         matrices.pushPose();
-        matrices.translate((float) last.x, (float) last.y, (float) last.z);
+        matrices.translate((float) (last.x - cameraPos.x()), (float) (last.y - cameraPos.y()), (float) (last.z - cameraPos.z()));
         PoseStackUtil.rotY(matrices, yaw);
         PoseStackUtil.rotX(matrices, -pitch);
         PoseStackUtil.rotZ(matrices, roll);// ((RailExtraSupplier) rail).getRenderReversed() ? -roll : 

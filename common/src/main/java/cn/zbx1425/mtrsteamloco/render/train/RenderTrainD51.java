@@ -105,7 +105,15 @@ public class RenderTrainD51 extends TrainRendererBase {
         }
 
         matrices.pushPose();
-        matrices.translate(x, y - 1, z);
+
+        var cameraPos = camera.getPosition();
+
+        if (train.getViewOffset() == null) {
+            matrices.translate((float) (x - cameraPos.x()), (float) (y - 1 - cameraPos.y()), (float) (z - cameraPos.z()));
+        } else {
+            matrices.translate((float) x, (float) y - 1, (float) z);
+        }
+
         PoseStackUtil.rotY(matrices, (float) Math.PI + yaw);
         final boolean hasPitch = pitch < 0 ? train.transportMode.hasPitchAscending : train.transportMode.hasPitchDescending;
         PoseStackUtil.rotX(matrices, hasPitch ? pitch : 0);

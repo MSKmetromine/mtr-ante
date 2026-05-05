@@ -5,6 +5,9 @@ import cn.zbx1425.mtrsteamloco.data.RailModelRegistry;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.sowcer.math.Vector3f;
 import cn.zbx1425.sowcer.util.AttrUtil;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.SectionPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.Vec3;
 import mtr.data.Rail;
 import cn.zbx1425.mtrsteamloco.data.RailModelProperties;
@@ -45,9 +48,19 @@ public class BakedRail {
                 Vec3 thi = rail.getPosition(i);
                 Vec3 mid = pre.add(thi).scale(0.5F);
                 float roll = RailExtraSupplier.getRollAngle(rail, i - interval / 2);
+
+                var chunkOrigin = new Vec3(
+                        (int) mid.x & (-1 << (4 + POS_SHIFT)),
+                        0.0,
+                        (int) mid.z & (-1 << (4 + POS_SHIFT))
+                );
+
+                var relPos = mid.subtract(chunkOrigin);
+
                 coveredChunks
                         .computeIfAbsent(chunkIdFromWorldPos((int) mid.x, (int) mid.z), ignored -> new ArrayList<>())
-                        .add(getLookAtMat(mid, pre, thi, roll, yOffset, reverse, interval));
+                        .add(getLookAtMat(relPos, pre, thi, roll, yOffset, reverse, interval));
+
                 pre = thi;
             }
         }
@@ -60,8 +73,8 @@ public class BakedRail {
         return RailModelRegistry.getProperty(modelKey);
     }
 
-    public static long chunkIdFromWorldPos(float bpX, float bpZ) {
-        return ((long)((int)bpX >> (4 + POS_SHIFT)) << 32) | ((long)((int)bpZ >> (4 + POS_SHIFT)) & 0xFFFFFFFFL);
+    public static long chunkIdFromWorldPos(int bpX, int bpZ) {
+        return ((long)(bpX >> (4 + POS_SHIFT)) << 32) | ((long)(bpZ >> (4 + POS_SHIFT)) & 0xFFFFFFFFL);
     }
 
     public static long chunkIdFromSectPos(int spX, int spZ) {

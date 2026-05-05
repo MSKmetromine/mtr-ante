@@ -107,7 +107,9 @@ public class BlockEntityEyeCandyRenderer extends BlockEntityRendererMapper<Block
             if (prop == null) continue;
             
             Matrix4f candyPose = worldPose.copy();
-            candyPose.mul(blockEntity.getBaseMatrix());
+            candyPose.mul(blockEntity.getBaseMatrix(
+                    Minecraft.getInstance().gameRenderer.getMainCamera().getPosition()
+            ));
             if (prop.model != null) {
                 MainClient.drawScheduler.enqueue(prop.model, candyPose, lightToUse);
             }

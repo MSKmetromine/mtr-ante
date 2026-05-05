@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import net.minecraft.client.Minecraft;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.value.Value;
 import org.spongepowered.asm.mixin.Final;
@@ -13,6 +14,7 @@ import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -622,29 +624,29 @@ public abstract class RailMixin implements RailExtraSupplier {
         cir.cancel();
     }
 
-    @Inject(method = "render", at = @At("HEAD"), cancellable = true, remap = false)
-    private void render(RenderRail callback, float offsetRadius1, float offsetRadius2, CallbackInfo ci) {
-        Rail rail = (Rail) (Object) this;
-		final double count = rail.getLength();
-		final double increment = count / Math.round(count);
-        final Vector3f a = new Vector3f(offsetRadius1, 0, 0);
-        final Vector3f b = new Vector3f(offsetRadius2, 0, 0);
-
-		for (double i = 0; i < count - 0.1; i += increment) {
-            Matrix4f mat0 = getLookAtMat(rail, i);
-            Matrix4f mat1 = getLookAtMat(rail, i + increment);
-            final Vector3f corner1 = mat0.transform(a);
-            final Vector3f corner2 = mat0.transform(b);
-            final Vector3f corner3 = mat1.transform(b);
-            final Vector3f corner4 = mat1.transform(a);
-
-			final float y1 = mat0.transform(Vector3f.ZERO).y();
-			final float y2 = mat1.transform(Vector3f.ZERO).y();
-
-			callback.renderRail(corner1.x(), corner1.z(), corner2.x(), corner2.z(), corner3.x(), corner3.z(), corner4.x(), corner4.z(), y1, y2);
-		}
-        ci.cancel();
-	}
+//    @Inject(method = "render", at = @At("HEAD"), cancellable = true, remap = false)
+//    private void render(RenderRail callback, float offsetRadius1, float offsetRadius2, CallbackInfo ci) {
+//        Rail rail = (Rail) (Object) this;
+//		final double count = rail.getLength();
+//		final double increment = count / Math.round(count);
+//        final Vector3f a = new Vector3f(offsetRadius1, 0, 0);
+//        final Vector3f b = new Vector3f(offsetRadius2, 0, 0);
+//
+//		for (double i = 0; i < count - 0.1; i += increment) {
+//            Matrix4f mat0 = getLookAtMat(rail, i);
+//            Matrix4f mat1 = getLookAtMat(rail, i + increment);
+//            final Vector3f corner1 = mat0.transform(a);
+//            final Vector3f corner2 = mat0.transform(b);
+//            final Vector3f corner3 = mat1.transform(b);
+//            final Vector3f corner4 = mat1.transform(a);
+//
+//			final float y1 = mat0.transform(Vector3f.ZERO).y();
+//			final float y2 = mat1.transform(Vector3f.ZERO).y();
+//
+//			callback.renderRail(corner1.x(), corner1.z(), corner2.x(), corner2.z(), corner3.x(), corner3.z(), corner4.x(), corner4.z(), y1, y2);
+//		}
+//        ci.cancel();
+//	}
 
     private static final double HALF_ACCEPT_THRESHOLD = ACCEPT_THRESHOLD / 2;
 

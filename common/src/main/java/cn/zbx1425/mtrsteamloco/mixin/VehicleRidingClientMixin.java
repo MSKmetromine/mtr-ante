@@ -252,7 +252,12 @@ public abstract class VehicleRidingClientMixin implements VehicleRidingClientExt
 		Camera camera = TrainRendererBaseAccessor.getCamera();
 		Level world = TrainRendererBaseAccessor.getWorld();
 		matrices.translate(0, RenderTrains.PLAYER_RENDER_OFFSET, 0);
-		
+
+		if (viewOffset == null) {
+			var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
+			playerPositionOffset = playerPositionOffset.subtract(cameraPos);
+		}
+
 		final Player renderPlayer = world.getPlayerByUUID(playerId);
 		if (renderPlayer != null && (!playerId.equals(TrainRendererBaseAccessor.getPlayer().getUUID()) || camera.isDetached())) {
 			EntityRenderer<? super Entity> entityrenderer = TrainRendererBaseAccessor.getEntityRenderDispatcher().getRenderer(renderPlayer);

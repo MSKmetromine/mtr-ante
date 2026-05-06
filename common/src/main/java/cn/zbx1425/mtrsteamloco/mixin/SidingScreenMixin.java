@@ -12,6 +12,7 @@ import mtr.data.RailType;
 import mtr.screen.WidgetBetterCheckbox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,9 +27,6 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
     @Shadow
     @Final
     private static Component MAX_MANUAL_SPEED;
-
-    @Shadow
-    protected abstract int drawWrappedText(PoseStack matrices, Component component, int y, int color);
 
     private SidingScreenMixin(Siding savedRailBase, TransportMode transportMode, DashboardScreen dashboardScreen, Component... additionalTexts) {
         super(savedRailBase, transportMode, dashboardScreen, additionalTexts);
@@ -55,6 +53,23 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         return true;
     }
 
+#if MC_VERSION >= "11200"
+    @Redirect(
+            method = "render",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)I", ordinal = 3)
+    )
+    private int hideMaxManualSpeedText(GuiGraphics instance, Font font, Component text, int x, int y, int color) {
+        return x;
+    }
+
+    @Inject(
+            method = "render",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)I", ordinal = 0)
+    )
+    private void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
+        guiGraphics.drawString(this.font, MAX_MANUAL_SPEED, 20, 154, -1);
+    }
+#else
     @Redirect(
             method = "render",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Font;draw(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/network/chat/Component;FFI)I", ordinal = 3)
@@ -70,4 +85,5 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
     private void render(PoseStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         Minecraft.getInstance().font.draw(matrices, MAX_MANUAL_SPEED, 20.0F, 154.0F, -1);
     }
+#endif
 }

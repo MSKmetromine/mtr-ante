@@ -57,7 +57,7 @@ public abstract class SidingMixin {
             return;
         }
 
-        if (this.maxManualSpeed == 0 && !this.isManual) {
+        if (!this.isManual) {
             this.maxManualSpeed = RailType.valueOf("P10000").ordinal();
         }
     }

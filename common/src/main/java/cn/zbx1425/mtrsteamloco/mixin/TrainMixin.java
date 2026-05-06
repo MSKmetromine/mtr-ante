@@ -4,11 +4,11 @@ import cn.zbx1425.mtrsteamloco.Main;
 import cn.zbx1425.mtrsteamloco.util.CarPosition;
 import cn.zbx1425.mtrsteamloco.util.CustomTrainType;
 import cn.zbx1425.mtrsteamloco.util.PositionRotation;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import mtr.block.BlockPSDAPGBase;
 import mtr.block.BlockPlatform;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Position;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -122,6 +122,15 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
     @Shadow(remap = false)
     protected abstract double asin(double v);
+
+    @Shadow(remap = false)
+    public static RailType convertMaxManualSpeed(int maxManualSpeed) {
+        throw new UnsupportedOperationException("Implemented via mixin");
+    }
+
+    @Shadow(remap = false)
+    @Final
+    public int maxManualSpeed;
 
     @Override
     public float getRollAngleAt(double value) {
@@ -416,5 +425,18 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "pitch", ordinal = 1)
     public float modifyCalculateCarPitch(float value, Level world, Vec3[] positions, int index, int dwellTicks) {
         return this.carPositions[index].car().pitch();
+    }
+
+    @WrapOperation(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;getRailSpeed(I)F"), remap = false)
+    public float wrapRailSpeed(Train instance, int railIndex, Operation<Float> original) {
+        var originalValue = original.call(instance, railIndex);
+
+        var manualRail = convertMaxManualSpeed(this.maxManualSpeed);
+
+        if (originalValue > manualRail.maxBlocksPerTick) {
+            return manualRail.maxBlocksPerTick;
+        }
+
+        return originalValue;
     }
 }

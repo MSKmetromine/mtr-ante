@@ -12,7 +12,6 @@ import mtr.data.RailType;
 import mtr.screen.WidgetBetterCheckbox;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -21,6 +20,10 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+
+#if MC_VERSION >= "12000"
+import net.minecraft.client.gui.GuiGraphics;
+#endif
 
 @Mixin(SidingScreen.class)
 public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> implements Icons {
@@ -70,6 +73,9 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         guiGraphics.drawString(this.font, MAX_MANUAL_SPEED, 20, 154, -1);
     }
 #else
+    @Shadow
+    private Font font;
+
     @Redirect(
             method = "render",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Font;draw(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/network/chat/Component;FFI)I", ordinal = 3)
@@ -83,7 +89,7 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Font;draw(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/network/chat/Component;FFI)I", ordinal = 0)
     )
     private void render(PoseStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
-        Minecraft.getInstance().font.draw(matrices, MAX_MANUAL_SPEED, 20.0F, 154.0F, -1);
+        this.font.draw(matrices, MAX_MANUAL_SPEED, 20.0F, 154.0F, -1);
     }
 #endif
 }

@@ -53,7 +53,7 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         return true;
     }
 
-#if MC_VERSION >= "11200"
+#if MC_VERSION >= "12000"
     @Redirect(
             method = "render",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;III)I", ordinal = 3)

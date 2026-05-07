@@ -73,9 +73,6 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         guiGraphics.drawString(this.font, MAX_MANUAL_SPEED, 20, 154, -1);
     }
 #else
-    @Shadow
-    private Font font;
-
     @Redirect(
             method = "render",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/Font;draw(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/network/chat/Component;FFI)I", ordinal = 3)

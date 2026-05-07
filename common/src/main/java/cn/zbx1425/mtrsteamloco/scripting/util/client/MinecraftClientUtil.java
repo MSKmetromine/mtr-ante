@@ -1,6 +1,7 @@
 package cn.zbx1425.mtrsteamloco.scripting.util.client;
 
 import cn.zbx1425.mtrsteamloco.scripting.util.WrappedEntity;
+import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
 import com.mojang.text2speech.Narrator;
 import mtr.mappings.Text;
@@ -52,6 +53,11 @@ public class MinecraftClientUtil {
     }
 
     public static boolean worldIsRainingAt(Vector3f pos) {
+        return Minecraft.getInstance().level != null
+                && Minecraft.getInstance().level.isRainingAt(pos.toBlockPos());
+    }
+
+    public static boolean worldIsRainingAt(Vector3d pos) {
         return Minecraft.getInstance().level != null
                 && Minecraft.getInstance().level.isRainingAt(pos.toBlockPos());
     }

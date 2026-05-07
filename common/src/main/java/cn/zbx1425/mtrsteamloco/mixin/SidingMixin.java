@@ -61,4 +61,14 @@ public abstract class SidingMixin {
             this.maxManualSpeed = RailType.valueOf("P10000").ordinal();
         }
     }
+
+    @Inject(method = "<init>(JLmtr/data/TransportMode;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;F)V", at = @At("TAIL"))
+    public void init2(long id, TransportMode transportMode, BlockPos pos1, BlockPos pos2, float railLength, CallbackInfo ci) {
+        this.maxManualSpeed = RailType.valueOf("P10000").ordinal();
+    }
+
+    @Inject(method = "<init>(Lmtr/data/TransportMode;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;F)V", at = @At("TAIL"))
+    public void init3(TransportMode transportMode, BlockPos pos1, BlockPos pos2, float railLength, CallbackInfo ci) {
+        this.maxManualSpeed = RailType.valueOf("P10000").ordinal();
+    }
 }

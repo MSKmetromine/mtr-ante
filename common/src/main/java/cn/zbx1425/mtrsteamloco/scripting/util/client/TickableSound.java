@@ -1,5 +1,6 @@
 package cn.zbx1425.mtrsteamloco.scripting.util.client;
 
+import cn.zbx1425.sowcer.math.Vector3d;
 import mtr.mappings.TickableSoundInstanceMapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -9,7 +10,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import cn.zbx1425.sowcer.math.Vector3f;
 import net.minecraft.resources.ResourceLocation;
-import org.joml.Vector4d;
 
 public class TickableSound extends TickableSoundInstanceMapper {
     public TickableSound(ResourceLocation sound) {
@@ -41,7 +41,7 @@ public class TickableSound extends TickableSoundInstanceMapper {
 		z = pos.z();
 	}
 
-    public void setData(float volume, float pitch, Vector4d pos) {
+    public void setData(float volume, float pitch, Vector3d pos) {
         this.pitch = pitch;
         this.volume = volume;
 

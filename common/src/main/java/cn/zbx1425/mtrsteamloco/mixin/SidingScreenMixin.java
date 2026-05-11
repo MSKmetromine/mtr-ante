@@ -115,7 +115,7 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
     )
     private void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.showScheduleControls && !this.buttonIsManual.selected() && this.buttonEnableSpeedLimit.selected()) {
-            guiGraphics.drawString(this.font, t.translatable("gui.mtrsteamloco.speed_limit"), 20, 194, -1);
+            guiGraphics.drawString(this.font, Text.translatable("gui.mtrsteamloco.speed_limit"), 20, 194, -1);
         }
     }
 #else

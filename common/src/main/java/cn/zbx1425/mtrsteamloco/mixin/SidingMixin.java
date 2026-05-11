@@ -1,6 +1,7 @@
 package cn.zbx1425.mtrsteamloco.mixin;
 
 import cn.zbx1425.mtrsteamloco.data.SidingExtraSupplier;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.sugar.Local;
 import io.netty.buffer.Unpooled;
 import mtr.data.RailwayDataDriveTrainModule;
@@ -78,10 +79,15 @@ public abstract class SidingMixin extends SavedRailBase implements IPacket, IRed
         this.speedLimit = packet.readVarInt();
     }
 
-    @Inject(method = "toReducedMessagePack", at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;writeMessagePackDataset(Lorg/msgpack/core/MessagePacker;Ljava/util/Collection;Ljava/lang/String;)V"), remap = false)
+    @Inject(method = "toReducedMessagePack", at = @At("TAIL"), remap = false)
     public void toReducedMessagePack(MessagePacker messagePacker, CallbackInfo ci) throws IOException {
         messagePacker.packString("is_speed_limit_enabled").packBoolean(this.isSpeedLimitEnabled);
         messagePacker.packString("speed_limit").packInt(this.speedLimit);
+    }
+
+    @ModifyReturnValue(method = "messagePackLength", at = @At("RETURN"), remap = false)
+    public int getMessagePackLength(int original) {
+        return original + 2;
     }
 
     @Inject(method = "writePacket", at = @At("TAIL"))

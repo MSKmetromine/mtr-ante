@@ -35,7 +35,8 @@
     "TrainRendererBaseAccessor",
     "TrainRendererBaseMixin",
     "VehicleRidingClientMixin",
-    "WidgetMapMixin"
+    "WidgetMapMixin",
+    "RenderRailwaySignMixin"
   ],
   "injectors": {
     "defaultRequire": 1

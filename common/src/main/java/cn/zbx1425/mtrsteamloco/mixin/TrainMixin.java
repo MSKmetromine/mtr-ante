@@ -1,6 +1,7 @@
 package cn.zbx1425.mtrsteamloco.mixin;
 
 import cn.zbx1425.mtrsteamloco.Main;
+import cn.zbx1425.mtrsteamloco.data.SidingExtraSupplier;
 import cn.zbx1425.mtrsteamloco.util.CarPosition;
 import cn.zbx1425.mtrsteamloco.util.CustomTrainType;
 import cn.zbx1425.mtrsteamloco.util.PositionRotation;
@@ -8,6 +9,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import mtr.block.BlockPSDAPGBase;
 import mtr.block.BlockPlatform;
+import mtr.client.ClientData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.Block;
@@ -131,6 +133,10 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @Shadow(remap = false)
     @Final
     public int maxManualSpeed;
+
+    @Shadow
+    @Final
+    public long sidingId;
 
     @Override
     public float getRollAngleAt(double value) {
@@ -428,13 +434,27 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     }
 
     @WrapOperation(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;getRailSpeed(I)F"), remap = false)
-    public float wrapRailSpeed(Train instance, int railIndex, Operation<Float> original) {
+    public float wrapRailSpeed(Train instance, int railIndex, Operation<Float> original, Level world) {
+        DataCache cache;
+
+        if (world.isClientSide()) {
+            cache = ClientData.DATA_CACHE;
+        } else {
+            cache = RailwayData.getInstance(world).dataCache;
+        }
+
+        var siding = cache.sidingIdMap.get(this.sidingId);
+
         var originalValue = original.call(instance, railIndex);
 
-        var manualRail = convertMaxManualSpeed(this.maxManualSpeed);
+        if (!((SidingExtraSupplier) siding).isSpeedLimitEnabled()) {
+            return originalValue;
+        }
 
-        if (originalValue > manualRail.maxBlocksPerTick) {
-            return manualRail.maxBlocksPerTick;
+        float speedLimit = ((SidingExtraSupplier) siding).getSpeedLimit() / 3.6F / 20.0F;
+
+        if (originalValue > speedLimit) {
+            return speedLimit;
         }
 
         return originalValue;

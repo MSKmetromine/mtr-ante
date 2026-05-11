@@ -154,5 +154,7 @@
     "gui.mtrsteamloco.rail_path_creator.success.pos": "Node selected",
     "gui.mtrsteamloco.route_path_creator.action_screen.title": "Route Path Creator Actions",
     "gui.mtrsteamloco.route_path_creator.action_screen.illegal_path": "Current path invalid:\n1. Start/end must be platforms\n2. Turnaround forbidden at start/end\n3. At least two nodes required",
-    "group.mtrsteamloco.builtin": "ANTE Built-in"
+    "group.mtrsteamloco.builtin": "ANTE Built-in",
+    "gui.mtrsteamloco.enable_speed_limit": "Enable speed limit",
+    "gui.mtrsteamloco.speed_limit": "Train speed limit"
 }

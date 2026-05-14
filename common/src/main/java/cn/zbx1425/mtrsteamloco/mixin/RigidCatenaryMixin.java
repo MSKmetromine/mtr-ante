@@ -5,11 +5,15 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
+
+#if MC_VERSION < "12000"
 import top.mcmtr.data.RigidCatenary;
+#endif
 
 @Pseudo
-@Mixin(RigidCatenary.class)
-public class RigidCatenaryMathMixin {
+@Mixin(targets = "top/mcmtr/data/RigidCatenary")
+public class RigidCatenaryMixin {
+    #if MC_VERSION < "12000"
     @Redirect(method = "renderSegment", at = @At(value = "INVOKE", target = "Ltop/mcmtr/data/RigidCatenary$RenderRigidCatenary;renderRigidCatenary(DDDDDDDDDDDDDDDDDD)V"), remap = false)
     public void renderCatenary(RigidCatenary.RenderRigidCatenary instance, double x1, double z1, double x2, double z2, double x3, double z3, double x4, double z4, double xs1, double zs1, double xs2, double zs2, double xs3, double zs3, double xs4, double zs4, double y1, double y2) {
         var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
@@ -26,4 +30,5 @@ public class RigidCatenaryMathMixin {
                 y1 - cameraPos.y(), y2 - cameraPos.y()
         );
     }
+#endif
 }

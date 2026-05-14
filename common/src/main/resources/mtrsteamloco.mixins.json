@@ -59,12 +59,12 @@
     "RailwayDataAccessor",
     "RailwayDataMixin",
     "RailwayDataRailActionsModuleMixin",
-    "RigidCatenaryMathMixin",
+    "RigidCatenaryMixin",
     "RouteMixin",
     "SidingAccessor",
     "SidingMixin",
     "TrainMixin",
-    "TransCatenaryMathMixin"
+    "TransCatenaryMixin"
   ],
   "server": [
   ]

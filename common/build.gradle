@@ -10,7 +10,9 @@ dependencies {
 
 	modApi("me.shedaniel.cloth:cloth-config:${rootProject.cloth_config_version}") { transitive = false }
 
-	compileOnly("maven.modrinth:station-decoration:${rootProject.station_decoration_version}-fabric,${minecraft_version}")
+	if (rootProject.minecraft_main_version < 20) {
+		compileOnly("maven.modrinth:station-decoration:${rootProject.station_decoration_version}-fabric,${minecraft_version}")
+	}
 }
 
 architectury {

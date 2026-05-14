@@ -134,7 +134,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @Final
     public int maxManualSpeed;
 
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public long sidingId;
 

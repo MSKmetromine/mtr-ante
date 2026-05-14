@@ -168,6 +168,19 @@ configure(allprojects) {
 		maven { url "https://maven.shedaniel.me"}
 		maven { url "https://repo1.maven.org/maven2/" }
 		//maven { url "https://nexus.velocitypowered.com/repository/maven-public/" }
+
+		exclusiveContent {
+			forRepository {
+				maven {
+					name = "Modrinth"
+					url = "https://api.modrinth.com/maven"
+				}
+			}
+
+			filter {
+				includeGroup "maven.modrinth"
+			}
+		}
 	}
 
 	tasks.withType(JavaCompile) {

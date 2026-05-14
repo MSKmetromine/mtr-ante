@@ -23,6 +23,7 @@
     "ModelSimpleTrainBaseAccessor",
     "NativeImageAccessor",
     "RailAccessor",
+    "RenderRailwaySignMixin",
     "RenderTrainsAccessor",
     "RenderTrainsMixin",
     "ResourcePackCreatorPropertiesMixin",
@@ -35,13 +36,13 @@
     "TrainRendererBaseAccessor",
     "TrainRendererBaseMixin",
     "VehicleRidingClientMixin",
-    "WidgetMapMixin",
-    "RenderRailwaySignMixin"
+    "WidgetMapMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "mixins": [
+    "CatenaryMixin",
     "DepotMixin",
     "FQHotSpotTruffleRuntimeAccess",
     "FQTruffleLanguage",
@@ -58,10 +59,12 @@
     "RailwayDataAccessor",
     "RailwayDataMixin",
     "RailwayDataRailActionsModuleMixin",
+    "RigidCatenaryMathMixin",
     "RouteMixin",
     "SidingAccessor",
     "SidingMixin",
-    "TrainMixin"
+    "TrainMixin",
+    "TransCatenaryMathMixin"
   ],
   "server": [
   ]

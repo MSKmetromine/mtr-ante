@@ -30,5 +30,5 @@ public class RigidCatenaryMixin {
                 y1 - cameraPos.y(), y2 - cameraPos.y()
         );
     }
-#endif
+    #endif
 }

@@ -36,7 +36,10 @@
     "TrainRendererBaseAccessor",
     "TrainRendererBaseMixin",
     "VehicleRidingClientMixin",
-    "WidgetMapMixin"
+    "WidgetMapMixin",
+    "RigidCatenaryMixin",
+    "CatenaryMixin",
+    "TransCatenaryMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -59,12 +62,10 @@
     "RailwayDataAccessor",
     "RailwayDataMixin",
     "RailwayDataRailActionsModuleMixin",
-    "RigidCatenaryMixin",
     "RouteMixin",
     "SidingAccessor",
     "SidingMixin",
-    "TrainMixin",
-    "TransCatenaryMixin"
+    "TrainMixin"
   ],
   "server": [
   ]

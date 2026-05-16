@@ -45,7 +45,6 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "CatenaryMixin",
     "DepotMixin",
     "FQHotSpotTruffleRuntimeAccess",
     "FQTruffleLanguage",

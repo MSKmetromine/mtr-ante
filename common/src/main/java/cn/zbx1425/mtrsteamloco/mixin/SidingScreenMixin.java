@@ -4,6 +4,7 @@ import cn.zbx1425.mtrsteamloco.data.SidingExtraSupplier;
 import com.mojang.blaze3d.vertex.PoseStack;
 import mtr.Icons;
 import mtr.client.IDrawing;
+import mtr.data.RailwayData;
 import mtr.data.Siding;
 import mtr.data.TransportMode;
 import mtr.mappings.Text;
@@ -15,6 +16,7 @@ import mtr.data.RailType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -45,11 +47,20 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
     @Final
     private WidgetBetterCheckbox buttonIsManual;
 
+    @Shadow(remap = false)
+    protected abstract String accelerationSliderFormatter(int value);
+
     @Unique
     private WidgetBetterCheckbox buttonEnableSpeedLimit;
 
     @Unique
     private WidgetShorterSlider sliderSpeedLimit;
+
+    @Unique
+    private WidgetBetterCheckbox buttonEnableDecelerationConstant;
+
+    @Unique
+    private WidgetShorterSlider sliderDecelerationConstant;
 
     private SidingScreenMixin(Siding savedRailBase, TransportMode transportMode, DashboardScreen dashboardScreen, Component... additionalTexts) {
         super(savedRailBase, transportMode, dashboardScreen, additionalTexts);
@@ -62,6 +73,12 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         });
 
         this.sliderSpeedLimit = new WidgetShorterSlider(0, 160, 1000 / SPEED_LIMIT_STEP, speed -> String.format("%s km/h", speed * SPEED_LIMIT_STEP), null);
+
+        this.buttonEnableDecelerationConstant = new WidgetBetterCheckbox(0, 0, 0, 20, Text.translatable("gui.mtrsteamloco.enable_deceleration_constant"), checked -> {
+            this.setIsSelectingTrain(false);
+        });
+
+        this.sliderDecelerationConstant = new WidgetShorterSlider(0, 80, Math.round(49.000004F), this::accelerationSliderFormatter, null);
     }
 
     @Inject(method = "init", at = @At("HEAD"))
@@ -74,9 +91,20 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         this.sliderSpeedLimit.setHeight(20);
         this.sliderSpeedLimit.setValue(((SidingExtraSupplier) this.savedRailBase).getSpeedLimit() / SPEED_LIMIT_STEP);
 
+        IDrawing.setPositionAndWidth(this.buttonEnableDecelerationConstant, 20, 208, this.width - this.textWidth - 40);
+        this.buttonEnableDecelerationConstant.setChecked(((SidingExtraSupplier) this.savedRailBase).isDecelerationConstantEnabled());
+
+        UtilitiesClient.setWidgetX(this.sliderDecelerationConstant, 20 + this.textWidth);
+        UtilitiesClient.setWidgetY(this.sliderDecelerationConstant, 228);
+        this.sliderDecelerationConstant.setHeight(20);
+        this.sliderDecelerationConstant.setValue(Math.round((((SidingExtraSupplier) this.savedRailBase).getDecelerationConstant() - 0.001F) * 1000.0F));
+
         if (this.showScheduleControls) {
             this.addDrawableChild(this.buttonEnableSpeedLimit);
             this.addDrawableChild(this.sliderSpeedLimit);
+
+            this.addDrawableChild(this.buttonEnableDecelerationConstant);
+            this.addDrawableChild(this.sliderDecelerationConstant);
         }
     }
 
@@ -84,6 +112,9 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
     private void setIsSelectingTrain(boolean isSelectingTrain, CallbackInfo ci) {
         this.buttonEnableSpeedLimit.visible = !isSelectingTrain && !this.buttonIsManual.selected();
         this.sliderSpeedLimit.visible = !isSelectingTrain && !this.buttonIsManual.selected() && this.buttonEnableSpeedLimit.selected();
+
+        this.buttonEnableDecelerationConstant.visible = !isSelectingTrain;
+        this.sliderDecelerationConstant.visible = !isSelectingTrain && this.buttonEnableDecelerationConstant.selected();
     }
 
     @Inject(method = "onClose", at = @At(value = "INVOKE", target = "Lmtr/data/Siding;setUnlimitedTrains(ZIZIFIZLjava/util/function/Consumer;)V", remap = false))
@@ -91,6 +122,20 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         ((SidingExtraSupplier) this.savedRailBase).updateSpeedLimit(
                 this.buttonEnableSpeedLimit.selected(),
                 this.sliderSpeedLimit.getIntValue() * SPEED_LIMIT_STEP,
+                packet -> PacketTrainDataGuiClient.sendUpdate(this.getPacketIdentifier(), packet)
+        );
+
+        float decelerationConstant;
+
+        try {
+            decelerationConstant = RailwayData.round(Mth.clamp((float) this.sliderDecelerationConstant.getIntValue() / 1000.0F + 0.001F, 0.001F, 0.05F), 3);
+        } catch (Exception e) {
+            decelerationConstant = 0.01F;
+        }
+
+        ((SidingExtraSupplier) this.savedRailBase).updateDecelerationConstant(
+                this.buttonEnableDecelerationConstant.selected(),
+                decelerationConstant,
                 packet -> PacketTrainDataGuiClient.sendUpdate(this.getPacketIdentifier(), packet)
         );
     }
@@ -117,6 +162,10 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
         if (this.showScheduleControls && !this.buttonIsManual.selected() && this.buttonEnableSpeedLimit.selected()) {
             guiGraphics.drawString(this.font, Text.translatable("gui.mtrsteamloco.speed_limit"), 20, 194, -1);
         }
+
+        if (this.showScheduleControls && this.buttonEnableDecelerationConstant.selected()) {
+            guiGraphics.drawString(this.font, Text.translatable("gui.mtrsteamloco.deceleration_constant"), 20, 234, -1);
+        }
     }
 #else
     @Inject(
@@ -126,6 +175,10 @@ public abstract class SidingScreenMixin extends SavedRailScreenBase<Siding> impl
     private void render(PoseStack matrices, int mouseX, int mouseY, float delta, CallbackInfo ci) {
         if (this.showScheduleControls && !this.buttonIsManual.selected() && this.buttonEnableSpeedLimit.selected()) {
             this.font.draw(matrices, Text.translatable("gui.mtrsteamloco.speed_limit"), 20.0F, 194.0F, -1);
+        }
+
+        if (this.showScheduleControls && this.buttonEnableDecelerationConstant.selected()) {
+            this.font.draw(matrices, Text.translatable("gui.mtrsteamloco.deceleration_constant"), 20.0F, 234.0F, -1);
         }
     }
 #endif

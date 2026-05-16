@@ -447,6 +447,10 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
         var originalValue = original.call(instance, railIndex);
 
+        if (siding == null) {
+            return originalValue;
+        }
+
         if (!((SidingExtraSupplier) siding).isSpeedLimitEnabled()) {
             return originalValue;
         }
@@ -458,5 +462,24 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         }
 
         return originalValue;
+    }
+
+    @WrapOperation(method = "simulateTrain", at = @At(value = "FIELD", target = "Lmtr/data/Train;accelerationConstant:F", ordinal = 1), remap = false)
+    public float wrapDeceleration(Train instance, Operation<Float> original, Level world) {
+        DataCache cache;
+
+        if (world.isClientSide()) {
+            cache = ClientData.DATA_CACHE;
+        } else {
+            cache = RailwayData.getInstance(world).dataCache;
+        }
+
+        var siding = cache.sidingIdMap.get(this.sidingId);
+
+        if (siding == null) {
+            return original.call(instance);
+        }
+
+        return ((SidingExtraSupplier) siding).isDecelerationConstantEnabled() ? ((SidingExtraSupplier) siding).getDecelerationConstant() : original.call(instance);
     }
 }

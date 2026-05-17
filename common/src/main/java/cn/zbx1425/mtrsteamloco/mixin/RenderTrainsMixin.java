@@ -431,4 +431,14 @@ public class RenderTrainsMixin extends EntityRendererMapper<EntitySeat> implemen
                 light
         );
     }
+
+    @Inject(method = "shouldNotRender(Lnet/minecraft/core/BlockPos;ILnet/minecraft/core/Direction;)Z", at = @At("HEAD"), cancellable = true)
+    private static void shouldNotRender(BlockPos pos, int maxDistance, Direction facing, CallbackInfoReturnable<Boolean> cir) {
+        for (var element : Thread.currentThread().getStackTrace()) {
+            if (element.getMethodName().toLowerCase().contains("catenary")) {
+                cir.setReturnValue(false);
+                return;
+            }
+        }
+    }
 }

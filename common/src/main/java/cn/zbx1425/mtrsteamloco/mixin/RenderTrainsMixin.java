@@ -6,6 +6,7 @@ import cn.zbx1425.mtrsteamloco.render.RailPicker;
 import cn.zbx1425.mtrsteamloco.render.RenderUtil;
 import cn.zbx1425.mtrsteamloco.render.rail.RailRenderDispatcher;
 import cn.zbx1425.mtrsteamloco.scripting.ScriptContextManager;
+import cn.zbx1425.mtrsteamloco.util.CatenaryWorkaround;
 import cn.zbx1425.sowcer.util.GlStateTracker;
 import cn.zbx1425.sowcerext.model.integration.BufferSourceProxy;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -434,11 +435,8 @@ public class RenderTrainsMixin extends EntityRendererMapper<EntitySeat> implemen
 
     @Inject(method = "shouldNotRender(Lnet/minecraft/core/BlockPos;ILnet/minecraft/core/Direction;)Z", at = @At("HEAD"), cancellable = true)
     private static void shouldNotRender(BlockPos pos, int maxDistance, Direction facing, CallbackInfoReturnable<Boolean> cir) {
-        for (var element : Thread.currentThread().getStackTrace()) {
-            if (element.getMethodName().toLowerCase().contains("catenary")) {
-                cir.setReturnValue(false);
-                return;
-            }
+        if (CatenaryWorkaround.isRender()) {
+            cir.setReturnValue(false);
         }
     }
 }

@@ -40,7 +40,8 @@
     "RigidCatenaryMixin",
     "CatenaryMixin",
     "TransCatenaryMixin",
-    "RenderPSDAPGDoorMixin"
+    "RenderPSDAPGDoorMixin",
+    "RenderSPBHorizontalElevatorDoorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

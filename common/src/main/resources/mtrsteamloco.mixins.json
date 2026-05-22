@@ -39,7 +39,8 @@
     "WidgetMapMixin",
     "RigidCatenaryMixin",
     "CatenaryMixin",
-    "TransCatenaryMixin"
+    "TransCatenaryMixin",
+    "RenderPSDAPGDoorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

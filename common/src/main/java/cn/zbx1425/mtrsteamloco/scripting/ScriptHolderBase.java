@@ -536,7 +536,7 @@ public abstract class ScriptHolderBase {
 
     public void close() {
         if (context != null) {
-            context.close();
+            context.close(true);
             context = null;
         }
 

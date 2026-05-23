@@ -41,7 +41,9 @@
     "CatenaryMixin",
     "TransCatenaryMixin",
     "RenderPSDAPGDoorMixin",
-    "RenderSPBHorizontalElevatorDoorMixin"
+    "RenderSPBHorizontalElevatorDoorMixin",
+    "RenderRouteBaseMixin",
+    "RenderStationNameBaseMixin"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -11,7 +11,8 @@ dependencies {
 	modApi("me.shedaniel.cloth:cloth-config:${rootProject.cloth_config_version}") { transitive = false }
 
 	if (rootProject.minecraft_main_version < 20) {
-		compileOnly("maven.modrinth:station-decoration:${rootProject.station_decoration_version}-fabric,${minecraft_version}")
+		modCompileOnly("maven.modrinth:station-decoration:${rootProject.station_decoration_version}-fabric,${minecraft_version}")
+		modCompileOnly("maven.modrinth:russian-metro-addon:fabric-${rootProject.russian_metro_version}")
 	}
 }
 

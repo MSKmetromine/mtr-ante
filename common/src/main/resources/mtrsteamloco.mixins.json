@@ -43,7 +43,8 @@
     "RenderPSDAPGDoorMixin",
     "RenderSPBHorizontalElevatorDoorMixin",
     "RenderRouteBaseMixin",
-    "RenderStationNameBaseMixin"
+    "RenderStationNameBaseMixin",
+    "RenderYamanoteRailwaySignMixin"
   ],
   "injectors": {
     "defaultRequire": 1

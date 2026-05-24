@@ -1,5 +1,6 @@
 package cn.zbx1425.mtrsteamloco.scripting.util.client;
 
+import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
 import com.mojang.text2speech.Narrator;
 import mtr.mappings.Text;
@@ -33,6 +34,18 @@ public class SoundHelper {
     }
 
     public static void play(SoundEvent sound, Vector3f pos, float volume, float pitch) {
+        Minecraft.getInstance().execute(() -> {
+            Minecraft.getInstance().level.playLocalSound(pos.x(), pos.y(), pos.z(), sound, SoundSource.BLOCKS, volume, pitch, false);
+        });
+    }
+
+    public static void play(SoundEvent sound, Vector3d pos, SoundSource source, float volume, float pitch) {
+        Minecraft.getInstance().execute(() -> {
+            Minecraft.getInstance().level.playLocalSound(pos.x(), pos.y(), pos.z(), sound, source, volume, pitch, false);
+        });
+    }
+
+    public static void play(SoundEvent sound, Vector3d pos, float volume, float pitch) {
         Minecraft.getInstance().execute(() -> {
             Minecraft.getInstance().level.playLocalSound(pos.x(), pos.y(), pos.z(), sound, SoundSource.BLOCKS, volume, pitch, false);
         });

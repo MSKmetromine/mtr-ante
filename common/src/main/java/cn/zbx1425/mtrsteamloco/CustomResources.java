@@ -43,7 +43,7 @@ public class CustomResources {
     }
 
     public static void init(ResourceManager resourceManager) {
-        Main.LOGGER.info("MTR-ANTE has started loading custom resources.");
+        Main.LOGGER.info("MTR-34 has started loading custom resources.");
 
         ClientConfig.clearCustomResponders();
 
@@ -59,10 +59,8 @@ public class CustomResources {
         RenderTrainDK3Mini.initGLModel(resourceManager);
         BlockEntityDirectNodeRenderer.initGLModel(resourceManager);
 
-        Main.LOGGER.info("MTR-ANTE: "
-                + "Uploaded Models: " + MainClient.modelManager.uploadedVertArrays.size()
-                + " (" + MainClient.modelManager.vaoCount + " VAOs, "
-                + MainClient.modelManager.vboCount + " VBOs)"
+        Main.LOGGER.info("MTR-34: "
+                + "Pre-uploaded Models: " + MainClient.modelManager.uploadedVertArrays.size()
         );
 
         mtr.client.TrainClientRegistry.register("dk3", new TrainProperties(

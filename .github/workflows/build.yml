@@ -56,7 +56,7 @@ jobs:
       - name: Capture release artifacts individually
         uses: actions/upload-artifact@v4
         with:
-          name: MTR-ANTE-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
+          name: MTR-34-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
           path: build/*.jar
           compression-level: 9
 #  upload-collectively:
@@ -172,13 +172,13 @@ jobs:
       - name: Download release artifacts
         uses: actions/download-artifact@v4
         with:
-          name: MTR-ANTE-${{ github.run_number }}-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
+          name: MTR-34-${{ github.run_number }}-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
           path: artifacts
           merge-multiple: true
       - name: Show structure of downloaded files
         run: ls -R artifacts
       - name: Show require file name
-        run: echo "artifacts/MTR-ANTE-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}.jar"
+        run: echo "artifacts/MTR-34-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}.jar"
       - name: Modrinth Publish
         uses: Kir-Antipov/mc-publish@v3.3
         if: ${{ !startsWith(github.event.head_commit.message, 'rel -t') }}
@@ -186,8 +186,8 @@ jobs:
           modrinth-id: ybOYitTg
           modrinth-featured: true
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
-          files: artifacts/MTR-ANTE-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}.jar
-          name: MTR-ANTE-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
+          files: artifacts/MTR-34-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}.jar
+          name: MTR-34-${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
           version: ${{ env.MOD_VERSION }}+${{ matrix.minecraft }}
           version-type: release
           loaders: |

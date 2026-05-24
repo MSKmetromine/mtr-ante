@@ -173,7 +173,7 @@ public abstract class ScriptHolderBase {
                 if (finishCallback != null) finishCallback.run();
                 scriptCtx.lastExecuteDuration = System.nanoTime() - startTime;
             } catch (Exception ex) {
-                Main.LOGGER.error("Error in ANTE Resource Pack JavaScript", ex);
+                Main.LOGGER.error("Error in MTR-34 Resource Pack JavaScript", ex);
                 failTime = System.currentTimeMillis();
                 failException = ex;
             } finally {

@@ -13,7 +13,7 @@ import java.io.IOException;
 
 public class EyeCandyProperties implements Closeable {
 
-    public static final EyeCandyProperties DEFAULT = new EyeCandyProperties("default_key", Text.literal(""), null, null, null, null, null, "0, 0, 0, 16, 16, 16", "0, 0, 0, 0, 0, 0", true, 0, false, false, false, "ANTE", Combination.decode(""));
+    public static final EyeCandyProperties DEFAULT = new EyeCandyProperties("default_key", Text.literal(""), null, null, null, null, null, "0, 0, 0, 16, 16, 16", "0, 0, 0, 0, 0, 0", true, 0, false, false, false, "MTR-34", Combination.decode(""));
 
     public String key;
     public MutableComponent name;

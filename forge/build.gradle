@@ -108,13 +108,13 @@ components.java {
 task moveForgeBuilds() {
 	doLast {
 		delete fileTree("../build").matching {
-			include "**/MTR-ANTE-forge*"
+			include "**/MTR-34-forge*"
 		}
 		copy {
 			from "build/libs"
 			into "../build"
 			exclude "*dev-shadow.jar"
-			rename "(.+)", "MTR-ANTE-\$1"
+			rename "(.+)", "MTR-34-\$1"
 		}
 	}
 }

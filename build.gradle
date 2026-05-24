@@ -208,7 +208,7 @@ configure(allprojects) {
 
 forgix {
 	group = "cn.zbx1425"
-	mergedJarName = "MTR-ANTE" + "-" + rootProject.mod_version + "+" + minecraft_version + ".jar"
+	mergedJarName = "MTR-34" + "-" + rootProject.mod_version + "+" + minecraft_version + ".jar"
 	outputDir = "build/"
 
 	forge {
@@ -245,7 +245,7 @@ tasks.register('dummyForgixOutput', DummyArchiveTask) {
 	// This is to make github.com/teaconmc/longjing happy.
 
 	destinationDirectory = file("build/")
-	archiveBaseName = "MTR-ANTE"
+	archiveBaseName = "MTR-34"
 	archiveVersion = rootProject.mod_version + "+" + minecraft_version
 	archiveExtension = "jar"
 }

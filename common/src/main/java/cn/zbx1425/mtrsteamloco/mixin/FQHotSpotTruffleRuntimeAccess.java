@@ -24,7 +24,7 @@ public abstract class FQHotSpotTruffleRuntimeAccess {
     @Inject(method = "createRuntime", at = @At("HEAD"), cancellable = true, remap = false)
     private static void onCreateRuntime(CallbackInfoReturnable<com.oracle.truffle.api.TruffleRuntime> cir) {
         cir.cancel();
-        cir.setReturnValue(new com.oracle.truffle.api.impl.DefaultTruffleRuntime("ANTE Shield"));   
+        cir.setReturnValue(new com.oracle.truffle.api.impl.DefaultTruffleRuntime("MTR-34 Shield"));
         if (true) return;
         try {
             // HotSpotThreadLocalHandshake.initializePendingOffset();
@@ -38,7 +38,7 @@ public abstract class FQHotSpotTruffleRuntimeAccess {
             cir.setReturnValue(rt);
         } catch (Throwable e) {
             e.printStackTrace();
-            cir.setReturnValue(new com.oracle.truffle.api.impl.DefaultTruffleRuntime("ANTE Shield"));
+            cir.setReturnValue(new com.oracle.truffle.api.impl.DefaultTruffleRuntime("MTR-34 Shield"));
         }
     }
 

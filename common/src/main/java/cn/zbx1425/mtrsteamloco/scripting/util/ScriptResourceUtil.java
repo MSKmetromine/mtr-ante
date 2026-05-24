@@ -42,12 +42,12 @@ public class ScriptResourceUtil {
 
     protected static Context activeContext;
     protected static final Stack<ResourceLocation> scriptLocationStack = new Stack<>();
-    protected static final Logger LOGGER = LoggerFactory.getLogger("MTR-ANTE JS");
+    protected static final Logger LOGGER = LoggerFactory.getLogger("MTR-34 JS");
 
     public static final boolean ANTE_FLAG = true;
 
     static {
-        Main.LOGGER.info("NTE version: " + getNTEVersion() + " (int " + getNTEVersionInt() + ") (protocol " + getNTEProtoVersion() + ")");
+        Main.LOGGER.info("MTR-34 version: " + getNTEVersion() + " (int " + getNTEVersionInt() + ") (protocol " + getNTEProtoVersion() + ")");
     }
 
     public static void executeScript(Context ctx, String script, ResourceLocation identifier) throws IOException {
@@ -67,7 +67,7 @@ public class ScriptResourceUtil {
 
     public static void includeScript(Object pathOrIdentifier) throws IOException {
         if (activeContext == null) throw new RuntimeException(
-                "Cannot use include in functions, as by that time ANTE no longer processes scripts."
+                "Cannot use include in functions, as by that time MTR-34 no longer processes scripts."
         );
         ResourceLocation identifier;
         if (pathOrIdentifier instanceof ResourceLocation) {
@@ -87,7 +87,7 @@ public class ScriptResourceUtil {
     public static void print(Object... objects) {
         if (objects.length == 0) objects = new Object[] {"null"};
         StringBuilder sb = new StringBuilder();
-        sb.append("[ANTE-JS] ");
+        sb.append("[MTR-34-JS] ");
         for (Object object : objects) {
             sb.append(object == null ? "null" : object.toString());
             sb.append(" ");

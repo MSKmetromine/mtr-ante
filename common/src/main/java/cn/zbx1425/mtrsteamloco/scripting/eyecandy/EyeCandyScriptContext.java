@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundEvent;
 import cn.zbx1425.sowcerext.reuse.DrawScheduler;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.mtrsteamloco.scripting.AbstractDrawCalls.DrawCallMap;
+import org.joml.Matrix4d;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,9 +32,9 @@ public class EyeCandyScriptContext extends AbstractScriptContext {
         this.entity = entity;
     }
 
-    public void commit(DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light) {
+    public void commit(DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4d soundPose) {
         drawCalls.commit(drawScheduler, basePose, worldPose, light);
-        scriptResult.commit(drawScheduler, basePose, worldPose, light);
+        scriptResult.commit(drawScheduler, basePose, worldPose, light, soundPose);
     }
 
     @Override

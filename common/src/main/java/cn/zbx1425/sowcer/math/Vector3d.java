@@ -20,7 +20,7 @@ public class Vector3d {
         this.impl = other.impl;
     }
 
-    private Vector3d(Vector3f other) {
+    public Vector3d(Vector3f other) {
         this(other.x(), other.y(), other.z());
     }
 

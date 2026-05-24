@@ -18,6 +18,7 @@ import net.minecraft.sounds.SoundSource;
 import cn.zbx1425.sowcerext.reuse.DrawScheduler;
 import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.mtrsteamloco.scripting.AbstractDrawCalls.DrawCallMap;
+import org.joml.Matrix4d;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class TrainScriptContext extends AbstractScriptContext {
         }
     }
 
-    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4f carPose) {
+    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4d carPose) {
         drawCalls[car].commit(drawScheduler, basePose, worldPose, light);
         scriptResult.commitCar(car, drawScheduler, basePose, worldPose, light, carPose);
     }

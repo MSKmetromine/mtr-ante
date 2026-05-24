@@ -3,6 +3,7 @@ package cn.zbx1425.mtrsteamloco.scripting.eyecandy;
 import cn.zbx1425.mtrsteamloco.scripting.AbstractDrawCalls;
 import cn.zbx1425.mtrsteamloco.scripting.util.client.DynamicModelHolder;
 import cn.zbx1425.sowcer.math.Matrix4f;
+import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
 import cn.zbx1425.sowcerext.model.ModelCluster;
 import cn.zbx1425.sowcerext.reuse.DrawScheduler;
@@ -10,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import org.joml.Matrix4d;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,17 +30,17 @@ public class EyeCandyDrawCalls extends AbstractDrawCalls {
     }
 
     public void addSound(SoundEvent sound, float volume, float pitch) {
-        soundList.add(new PlaySoundCall(sound, Vector3f.ZERO, volume, pitch));
+        soundList.add(new PlaySoundCall(sound, Vector3d.ZERO, volume, pitch));
     }
 
-    public void commit(DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light) {
+    public void commit(DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4d soundPose) {
         for (ClusterDrawCall clusterDrawCall : drawList) {
             clusterDrawCall.commit(drawScheduler, basePose, worldPose, light);
         }
         ClientLevel level = Minecraft.getInstance().level;
         if (level == null) return;
         for (PlaySoundCall playSoundCall : soundList) {
-            playSoundCall.commit(level, basePose);
+            playSoundCall.commit(level, soundPose);
         }
     }
 

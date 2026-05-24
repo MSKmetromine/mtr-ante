@@ -2,12 +2,14 @@ package cn.zbx1425.mtrsteamloco.scripting;
 
 import cn.zbx1425.mtrsteamloco.scripting.util.client.DynamicModelHolder;
 import cn.zbx1425.sowcer.math.Matrix4f;
+import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
 import cn.zbx1425.sowcerext.model.ModelCluster;
 import cn.zbx1425.sowcerext.reuse.DrawScheduler;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import org.joml.Matrix4d;
 
 import java.util.*;
 
@@ -83,19 +85,24 @@ public abstract class AbstractDrawCalls {
 
     public static class PlaySoundCall {
         public SoundEvent sound;
-        public Vector3f position;
+        public Vector3d position;
         public float volume;
         public float pitch;
 
-        public PlaySoundCall(SoundEvent sound, Vector3f position, float volume, float pitch) {
+        public PlaySoundCall(SoundEvent sound, Vector3d position, float volume, float pitch) {
             this.sound = sound;
             this.position = position;
             this.volume = volume;
             this.pitch = pitch;
         }
 
-        public void commit(ClientLevel level, Matrix4f worldPose) {
-            Vector3f worldPos = worldPose.transform(position);
+        public PlaySoundCall(SoundEvent sound, Vector3f position, float volume, float pitch) {
+            this(sound, new Vector3d(position), volume, pitch);
+        }
+
+        public void commit(ClientLevel level, Matrix4d worldPose) {
+            var worldPos = worldPose.transformPosition(position.toVec3().x(), position.toVec3().y(), position.toVec3().z(), new org.joml.Vector3d());
+
             level.playLocalSound(worldPos.x(), worldPos.y(), worldPos.z(),
                     sound, SoundSource.BLOCKS,
                     volume, pitch, false);

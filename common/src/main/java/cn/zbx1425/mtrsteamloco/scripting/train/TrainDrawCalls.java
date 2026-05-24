@@ -3,6 +3,7 @@ package cn.zbx1425.mtrsteamloco.scripting.train;
 import cn.zbx1425.mtrsteamloco.scripting.AbstractDrawCalls;
 import cn.zbx1425.mtrsteamloco.scripting.util.client.DynamicModelHolder;
 import cn.zbx1425.sowcer.math.Matrix4f;
+import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
 import cn.zbx1425.sowcerext.model.ModelCluster;
 import cn.zbx1425.sowcerext.reuse.DrawScheduler;
@@ -18,6 +19,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Matrix4d;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,10 +52,14 @@ public class TrainDrawCalls extends AbstractDrawCalls {
     }
 
     public void addCarSound(int car, SoundEvent sound, Vector3f position, float volume, float pitch) {
+        carSoundLists[car].add(new PlaySoundCall(sound, new Vector3d(position), volume, pitch));
+    }
+
+    public void addCarSound(int car, SoundEvent sound, Vector3d position, float volume, float pitch) {
         carSoundLists[car].add(new PlaySoundCall(sound, position, volume, pitch));
     }
 
-    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4f carPose) {
+    public void commitCar(int car, DrawScheduler drawScheduler, Matrix4f basePose, Matrix4f worldPose, int light, Matrix4d carPose) {
         for (ClusterDrawCall clusterDrawCall : carDrawLists[car]) {
             clusterDrawCall.commit(drawScheduler, basePose, worldPose, light);
         }

@@ -114,9 +114,12 @@ public class BlockEntityEyeCandyRenderer extends BlockEntityRendererMapper<Block
                 MainClient.drawScheduler.enqueue(prop.model, candyPose, lightToUse);
             }
             if (prop.script != null && blockEntity.scriptContext != null) {
+                var soundPose = blockEntity.getBaseMatrixD(Vec3.ZERO);
+
                 synchronized (blockEntity.scriptContext) {
-                    blockEntity.scriptContext.commit(MainClient.drawScheduler, candyPose, worldPose, lightToUse);
+                    blockEntity.scriptContext.commit(MainClient.drawScheduler, candyPose, worldPose, lightToUse, soundPose);
                 }
+
                 prop.script.tryCallRenderFunctionAsync(blockEntity.scriptContext);
             }
         }

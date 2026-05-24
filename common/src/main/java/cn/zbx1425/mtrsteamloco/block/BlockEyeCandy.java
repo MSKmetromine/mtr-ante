@@ -62,6 +62,7 @@ import me.shedaniel.clothconfig2.api.AbstractConfigListEntry;
 import net.minecraft.world.phys.AABB;
 import me.shedaniel.clothconfig2.impl.builders.TextDescriptionBuilder;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
+import org.joml.Matrix4d;
 
 import java.util.*;
 import java.io.IOException;
@@ -312,6 +313,23 @@ public class BlockEyeCandy extends BlockDirectionalMapper implements EntityBlock
         public Matrix4f getBaseMatrix(Vec3 origin) {
             final Direction facing = IBlock.getStatePropertySafe(getBlockState(), FACING);
             final Matrix4f matrix = new Matrix4f();
+            BlockPos pos = getWorldPos();
+            matrix.translate(
+                    (float) (pos.getX() - origin.x() + 0.5F + translateX),
+                    (float) (pos.getY() - origin.y() + translateY),
+                    (float) (pos.getZ() - origin.z() + 0.5F + translateZ)
+            );
+            matrix.rotateY((float) Math.toRadians(180F - facing.toYRot()));
+            matrix.rotateX(rotateX);
+            matrix.rotateY(rotateY);
+            matrix.rotateZ(rotateZ);
+            matrix.scale(scaleX, scaleY, scaleZ);
+            return matrix;
+        }
+
+        public Matrix4d getBaseMatrixD(Vec3 origin) {
+            final Direction facing = IBlock.getStatePropertySafe(getBlockState(), FACING);
+            final var matrix = new Matrix4d();
             BlockPos pos = getWorldPos();
             matrix.translate(
                     (float) (pos.getX() - origin.x() + 0.5F + translateX),

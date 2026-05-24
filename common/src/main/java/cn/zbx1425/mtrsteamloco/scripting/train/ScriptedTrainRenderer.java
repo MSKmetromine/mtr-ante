@@ -20,6 +20,7 @@ import cn.zbx1425.mtrsteamloco.data.RailExtraSupplier;
 import cn.zbx1425.mtrsteamloco.data.TrainExtraSupplier;
 import mtr.data.Rail;
 import cn.zbx1425.mtrsteamloco.scripting.train.TrainWrapper;
+import org.joml.Matrix4d;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -130,8 +131,15 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
             basePose.rotateZ(isReversed? -roll : roll);
             basePose.translate(0, 1, 0);
 
-            var soundPose = basePose.copy();
-            soundPose.translate((float) cameraPos.x(), (float) cameraPos.y(), (float) cameraPos.z());
+            var soundPose = new Matrix4d();
+
+            soundPose.translate(x, y, z);
+
+            soundPose.rotateY((float) Math.PI + yaw);
+            soundPose.rotateX(hasPitch ? pitch : 0);
+            soundPose.translate(0, -1, 0);
+            soundPose.rotateZ(isReversed? -roll : roll);
+            soundPose.translate(0, 1, 0);
 
             synchronized (trainScripting) {
                 trainScripting.commitCar(carIndex, MainClient.drawScheduler, basePose, worldPose, light, soundPose);

@@ -7,6 +7,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
@@ -33,23 +34,43 @@ public class WidgetMapMixin {
         mtrSteamLoco$bottom = (double) savedRailPos.getZ() + ((double) i + 1.0) / (double) savedRailCount;
     }
 
-    @ModifyArgs(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;isBetween(DDD)Z", ordinal = 0))
-    private static void isBetween0(Args args) {
-        args.set(1, mtrSteamLoco$left);
-        args.set(2, mtrSteamLoco$right);
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;isBetween(DDD)Z", ordinal = 0), index = 1)
+    private static double isBetween0Arg1(double value) {
+        return mtrSteamLoco$left;
     }
 
-    @ModifyArgs(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;isBetween(DDD)Z", ordinal = 1))
-    private static void isBetween1(Args args) {
-        args.set(1, mtrSteamLoco$top);
-        args.set(2, mtrSteamLoco$bottom);
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;isBetween(DDD)Z", ordinal = 0), index = 2)
+    private static double isBetween0Arg2(double value) {
+        return mtrSteamLoco$right;
     }
 
-    @ModifyArgs(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/screen/WidgetMap$MouseOnSavedRailCallback;mouseOnSavedRailCallback(Lmtr/data/SavedRailBase;DDDD)V"))
-    private static void mouseOnSavedRailCallback(Args args) {
-        args.set(1, mtrSteamLoco$left);
-        args.set(2, mtrSteamLoco$top);
-        args.set(3, mtrSteamLoco$right);
-        args.set(4, mtrSteamLoco$bottom);
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;isBetween(DDD)Z", ordinal = 1), index = 1)
+    private static double isBetween1Arg1(double value) {
+        return mtrSteamLoco$top;
+    }
+
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/data/RailwayData;isBetween(DDD)Z", ordinal = 1), index = 2)
+    private static double isBetween1Arg2(double value) {
+        return mtrSteamLoco$bottom;
+    }
+
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/screen/WidgetMap$MouseOnSavedRailCallback;mouseOnSavedRailCallback(Lmtr/data/SavedRailBase;DDDD)V"), index = 1)
+    private static double mouseOnSavedRailCallbackArg1(double value) {
+        return mtrSteamLoco$left;
+    }
+
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/screen/WidgetMap$MouseOnSavedRailCallback;mouseOnSavedRailCallback(Lmtr/data/SavedRailBase;DDDD)V"), index = 2)
+    private static double mouseOnSavedRailCallbackArg2(double value) {
+        return mtrSteamLoco$top;
+    }
+
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/screen/WidgetMap$MouseOnSavedRailCallback;mouseOnSavedRailCallback(Lmtr/data/SavedRailBase;DDDD)V"), index = 3)
+    private static double mouseOnSavedRailCallbackArg3(double value) {
+        return mtrSteamLoco$right;
+    }
+
+    @ModifyArg(method = "lambda$mouseOnSavedRail$11", at = @At(value = "INVOKE", target = "Lmtr/screen/WidgetMap$MouseOnSavedRailCallback;mouseOnSavedRailCallback(Lmtr/data/SavedRailBase;DDDD)V"), index = 4)
+    private static double mouseOnSavedRailCallbackArg4(double value) {
+        return mtrSteamLoco$bottom;
     }
 }

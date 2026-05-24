@@ -1,1 +1,0 @@
-Start-Process powershell.exe "-NoExit -Command `"cd .\common\src\main\resources\assets\mtrsteamloco\lang\; python .\translator.py`""

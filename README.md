@@ -1,22 +1,21 @@
-# MTR-ANTE
+# MTR-34
 
-Aphrodite's Nemo's Transit Expansion (MTR-ANTE) 是一个基于Minecraft Transit Railway Mod的实验性功能扩展，目前仅支持MTR 3.1.2 ~ 3.2.2 版本，不支持4.0.0或其他版本。
+## Setting up the development environment
 
-## 支持
+It is recommended to use IntelliJ IDEA with the [manifold-ij](https://plugins.jetbrains.com/plugin/10057-manifold-ij) plugin.
 
-[文档](https://aphrodite281.github.io/mtr-ante/#/)、QQ群(836291719)
+Create a `build.properties` file and one of the following lines depending on your desired Minecraft version:
 
-## 下载
-[Releases](https://github.com/aphrodite281/mtr-ante/releases) 、 [Modrinth](https://modrinth.com/mod/mtr-ante/)
+| Minecraft Version | Value                  |
+|-------------------|------------------------|
+| 1.17.1            | ```MC_VERSION=11701``` |
+| 1.18.2            | ```MC_VERSION=11802``` |
+| 1.19.2            | ```MC_VERSION=11902``` |
+| 1.19.3            | ```MC_VERSION=11903``` |
+| 1.19.4            | ```MC_VERSION=11904``` |
+| 1.20.1            | ```MC_VERSION=12001``` |
 
-## 构建
+Then run `./gradlew setupLibrary`.
 
-在执行`build`任务前须先执行`setupLibrary`，可以用类似-PbuildVersion="1.18.2"参数指定版本(1.17.1 1.18.2 1.19.2 1.19.3 1.19.4 1.20.1)。
-以1.18.2为例，  
-第一次构建前执行：  
-
-- `./gradlew setupLibrary -PbuildVersion="1.18.2"`   
-
-每次构建时执行：  
-
-- `./gradlew build -PbuildVersion="1.18.2"`  
+## Building 
+After setting up the environment, run `./gradlew build`.

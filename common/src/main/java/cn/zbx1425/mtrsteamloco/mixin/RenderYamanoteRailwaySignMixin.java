@@ -2,6 +2,7 @@ package cn.zbx1425.mtrsteamloco.mixin;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import mtr.block.BlockRailwaySign;
+import mtr.mappings.BlockEntityMapper;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Direction;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,9 +23,9 @@ public class RenderYamanoteRailwaySignMixin {
         var cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().getPosition();
 
         instance.translate(
-                0.5 + (double) entity.getBlockPos().getX() - cameraPos.x(),
-                0.53125 + (double) entity.getBlockPos().getY() - cameraPos.y(),
-                0.5 + (double) entity.getBlockPos().getZ() - cameraPos.z()
+                0.5 + (double) ((BlockEntityMapper) entity).getBlockPos().getX() - cameraPos.x(),
+                0.53125 + (double) ((BlockEntityMapper) entity).getBlockPos().getY() - cameraPos.y(),
+                0.5 + (double) ((BlockEntityMapper) entity).getBlockPos().getZ() - cameraPos.z()
         );
     }
     #endif

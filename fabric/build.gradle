@@ -46,7 +46,7 @@ dependencies {
 	clothConfigJar("me.shedaniel.cloth:basic-math:0.6.1") { transitive false }
 
 	if (rootProject.minecraft_main_version < 20) {
-//		modRuntimeOnly("maven.modrinth:station-decoration:${rootProject.station_decoration_version}-fabric,${minecraft_version}")
+		modCompileOnly("maven.modrinth:station-decoration:${rootProject.station_decoration_version}-fabric,${minecraft_version}")
 		modRuntimeOnly("maven.modrinth:russian-metro-addon:fabric-${rootProject.russian_metro_version}")
 	}
 }

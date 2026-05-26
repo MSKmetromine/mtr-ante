@@ -2,9 +2,7 @@ package cn.zbx1425.mtrsteamloco.scripting.train;
 
 import cn.zbx1425.mtrsteamloco.scripting.AbstractScriptContext;
 import cn.zbx1425.mtrsteamloco.scripting.util.client.DynamicModelHolder;
-import cn.zbx1425.sowcer.math.Matrices;
-import cn.zbx1425.sowcer.math.Matrix4f;
-import cn.zbx1425.sowcer.math.Vector3f;
+import cn.zbx1425.sowcer.math.*;
 import cn.zbx1425.sowcerext.model.ModelCluster;
 import mtr.client.ClientData;
 import mtr.data.TrainClient;
@@ -16,7 +14,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import cn.zbx1425.sowcerext.reuse.DrawScheduler;
-import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.mtrsteamloco.scripting.AbstractDrawCalls.DrawCallMap;
 import org.joml.Matrix4d;
 
@@ -108,7 +105,7 @@ public class TrainScriptContext extends AbstractScriptContext {
 #else
         new SoundEvent(sound)
 #endif
-        , new Vector3f(x, y, z), volume, pitch
+        , new Vector3d(x, y, z), volume, pitch
         );
     }
 

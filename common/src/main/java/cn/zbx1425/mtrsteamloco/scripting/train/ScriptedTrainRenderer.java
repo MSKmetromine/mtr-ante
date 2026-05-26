@@ -8,10 +8,12 @@ import cn.zbx1425.sowcer.math.Matrix4f;
 import cn.zbx1425.sowcer.math.PoseStackUtil;
 import cn.zbx1425.sowcer.math.Vector3d;
 import cn.zbx1425.sowcer.math.Vector3f;
+import mtr.MTRClient;
 import mtr.client.ClientData;
 import mtr.data.TrainClient;
 import mtr.render.RenderTrains;
 import mtr.render.TrainRendererBase;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.LightLayer;
@@ -84,9 +86,11 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
         }
 
         Vec3 offset = train.vehicleRidingClient.getVehicleOffset();
+
         if (offset != null) {
             carPose.translate((float) offset.x, (float) offset.y, (float) offset.z);
         }
+
         carPose.rotateY((float) Math.PI + yaw);
         carPose.rotateX(hasPitch ? pitch : 0);
         carPose.translate(0, -1, 0);
@@ -133,7 +137,13 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
 
             var soundPose = new Matrix4d();
 
-            soundPose.translate(x, y, z);
+            var vehicleOffset = train.vehicleRidingClient.getVehicleOffset();
+
+            if (vehicleOffset == null) {
+                soundPose.translate(x, y, z);
+            } else {
+                soundPose.translate(x + vehicleOffset.x(), y + vehicleOffset.y(), z + vehicleOffset.z());
+            }
 
             soundPose.rotateY((float) Math.PI + yaw);
             soundPose.rotateX(hasPitch ? pitch : 0);

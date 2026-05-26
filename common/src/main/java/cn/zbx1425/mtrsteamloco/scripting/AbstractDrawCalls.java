@@ -101,7 +101,7 @@ public abstract class AbstractDrawCalls {
         }
 
         public void commit(ClientLevel level, Matrix4d worldPose) {
-            var worldPos = worldPose.transformPosition(position.toVec3().x(), position.toVec3().y(), position.toVec3().z(), new org.joml.Vector3d());
+            var worldPos = worldPose.transformPosition(position.x(), position.y(), position.z(), new org.joml.Vector3d());
 
             level.playLocalSound(worldPos.x(), worldPos.y(), worldPos.z(),
                     sound, SoundSource.BLOCKS,

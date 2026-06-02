@@ -15,7 +15,7 @@ Create a `build.properties` file and one of the following lines depending on you
 | 1.19.4            | ```MC_VERSION=11904``` |
 | 1.20.1            | ```MC_VERSION=12001``` |
 
-Then run `./gradlew setupLibrary`.
+Then run `./gradlew setupLibrary buildF`.
 
 ## Building 
 After setting up the environment, run `./gradlew build`.

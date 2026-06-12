@@ -31,6 +31,9 @@ import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.core.MessageUnpacker;
 import org.msgpack.value.Value;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import java.util.*;
@@ -39,6 +42,9 @@ import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RailwayData.class)
 public class RailwayDataMixin implements IPacket {
@@ -95,10 +101,34 @@ public class RailwayDataMixin implements IPacket {
 	@Shadow(remap = false) private static String KEY_SIGNAL_BLOCKS = "signal_blocks";
 	@Shadow(remap = false) private static String KEY_USE_TIME_AND_WIND_SYNC = "use_time_and_wind_sync";
 
-    public void simulateTrains() {
+	private boolean simulationRunning;
+
+	private ExecutorService simulationExecutor;
+
+	@Inject(method = "<init>", at = @At("TAIL"))
+	private void init(Level world, CallbackInfo ci) {
+		this.simulationRunning = false;
+		this.simulationExecutor = Executors.newSingleThreadExecutor();
+	}
+
+	public void simulateTrains() {
+		if (this.simulationRunning) {
+			return;
+		}
+
+		this.simulationRunning = true;
+
+		this.simulationExecutor.submit(() -> {
+			this.simulateTrainsImpl();
+			this.simulationRunning = false;
+		});
+	}
+
+    public void simulateTrainsImpl() {
 
         RAIL_UPDATE_DISTANCE = world.getServer().getPlayerList().getViewDistance() * 16;
 		List<? extends Player> players = world.players();
+
 		players.forEach(player -> {
 			BlockPos playerBlockPos = player.blockPosition();
 			Vec3 playerPos = player.position();

@@ -5,12 +5,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.client.Minecraft;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.value.Value;
-import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -25,10 +29,12 @@ import cn.zbx1425.mtrsteamloco.network.util.DoubleFloatMapSerializer;
 import cn.zbx1425.mtrsteamloco.network.util.StringMapSerializer;
 import cn.zbx1425.mtrsteamloco.render.rail.BakedRail;
 import cn.zbx1425.sowcer.math.Matrix4f;
+import cn.zbx1425.sowcer.math.Vector3f;
 import cn.zbx1425.mtrsteamloco.network.PacketUpdateRail;
 import io.netty.buffer.Unpooled;
 import mtr.data.MessagePackHelper;
 import mtr.data.Rail;
+import mtr.data.Rail.RenderRail;
 import mtr.data.RailAngle;
 import mtr.data.RailType;
 import mtr.data.TransportMode;
@@ -63,8 +69,6 @@ public abstract class RailMixin implements RailExtraSupplier {
     private BezierCurve bezier = null;
     private BlockPos posStart, posEnd;
     private RailAngle railAngleStart, railAngleEnd;
-
-    private double length;
 
     @Override
     public String getModelKey() {
@@ -303,8 +307,6 @@ public abstract class RailMixin implements RailExtraSupplier {
         if (transportMode == TransportMode.TRAIN) {
             genForSegmentsAndArcs();
         }
-
-        this.length = this.mtrSteamLoco$calcLength();
     }
 
     private void genForSegmentsAndArcs() {
@@ -368,35 +370,17 @@ public abstract class RailMixin implements RailExtraSupplier {
         this.facingEnd = getRailAngle(true);
     }
 
-//    @Shadow(remap = false) public abstract double getLength();
+    @Shadow(remap = false) public abstract double getLength();
     @Shadow(remap = false) public abstract Vec3 getPosition(double distance);
     @Shadow(remap = false) public abstract RailAngle getRailAngle(boolean getEnd);
 
-//    @Inject(method = "getLength", at = @At("HEAD"), cancellable = true, remap = false)
-//    private void getLength(CallbackInfoReturnable<Double> cir) {
-//        if (pathMode == 1 && bezier!= null) {
-//            cir.setReturnValue(bezier.getLength());
-//            cir.cancel();
-//            return;
-//        }
-//    }
-
-    /**
-     * @author A-Polyakhov
-     * @reason overwrite for performance improvements
-     */
-    @Overwrite(remap = false)
-    public double getLength() {
-        return this.length;
-    }
-
-    @Unique
-    private double mtrSteamLoco$calcLength() {
-        if (this.pathMode == 1 && this.bezier != null) {
-            return this.bezier.getLength();
+    @Inject(method = "getLength", at = @At("HEAD"), cancellable = true, remap = false)
+    private void getLength(CallbackInfoReturnable<Double> cir) {
+        if (pathMode == 1 && bezier!= null) {
+            cir.setReturnValue(bezier.getLength());
+            cir.cancel();
+            return;
         }
-
-        return Math.abs(this.tEnd2 - this.tStart2) + Math.abs(this.tEnd1 - this.tStart1);
     }
 
     @Inject(method = "getRailAngle", at = @At("HEAD"), cancellable = true, remap = false)
@@ -473,8 +457,6 @@ public abstract class RailMixin implements RailExtraSupplier {
         facingStart = RailAngleExtra.fromRadians(messagePackHelper.getDouble("facing_start"));
         posEnd = BlockPos.of(messagePackHelper.getLong("pos_end"));
         facingEnd = RailAngleExtra.fromRadians(messagePackHelper.getDouble("facing_end"));
-
-        this.length = this.mtrSteamLoco$calcLength();
     }
 
     @Inject(method = "toMessagePack", at = @At("TAIL"), remap = false)
@@ -517,8 +499,6 @@ public abstract class RailMixin implements RailExtraSupplier {
 
     @Inject(method = "<init>(Lnet/minecraft/network/FriendlyByteBuf;)V", at = @At("TAIL"))
     private void fromPacket(FriendlyByteBuf packet, CallbackInfo ci) {
-        this.length = this.mtrSteamLoco$calcLength();
-
         if (!Main.enableRegistry) return;
         if (packet.readableBytes() <= 4) return;
         if (packet.readInt() != NTE_PACKET_EXTRA_MAGIC) {
@@ -549,13 +529,6 @@ public abstract class RailMixin implements RailExtraSupplier {
         facingStart = RailAngleExtra.fromRadians(packet.readDouble());
         posEnd = packet.readBlockPos();
         facingEnd = RailAngleExtra.fromRadians(packet.readDouble());
-
-        this.length = this.mtrSteamLoco$calcLength();
-    }
-
-    @Inject(method = "<init>(Lnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
-    private void fromTag(CompoundTag compoundTag, CallbackInfo ci) {
-        this.length = this.mtrSteamLoco$calcLength();
     }
 
     @Inject(method = "writePacket", at = @At("TAIL"))

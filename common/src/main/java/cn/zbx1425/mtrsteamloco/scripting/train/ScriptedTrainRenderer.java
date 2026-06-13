@@ -92,8 +92,8 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
         }
 
         carPose.rotateY((float) Math.PI + yaw);
-        carPose.rotateX(hasPitch ? pitch : 0);
-        carPose.translate(0, -1, 0);
+            carPose.rotateX(hasPitch ? pitch : 0);
+            carPose.translate(0, -1, 0);
         carPose.rotateZ(isReversed? -roll : roll);
         carPose.translate(0, 1, 0);
 
@@ -103,7 +103,15 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
         trainExtra.doorLeftOpen[carIndex] = doorLeftOpen;
         trainExtra.doorRightOpen[carIndex] = doorRightOpen;
         trainExtra.lastWorldPose[carIndex] = copy.copy();
-        trainExtra.lastCarPosition[carIndex] = new Vector3d(x, y, z);
+
+        var vehicleOffset = train.vehicleRidingClient.getVehicleOffset();
+
+        if (vehicleOffset == null) {
+            trainExtra.lastCarPosition[carIndex] = new Vector3d(x, y, z);
+        } else {
+            trainExtra.lastCarPosition[carIndex] = new Vector3d(x + vehicleOffset.x(), y + vehicleOffset.y(), z + vehicleOffset.z());
+        }
+
         trainExtra.lastCarRotation[carIndex] = new Vector3f(hasPitch ? pitch : 0.0, (float) Math.PI + yaw, isReversed ? -roll : roll);
         trainExtra.shouldRender = shouldRender;
         trainExtra.isInDetailDistance = true;// (posAverage != null && posAverage.distSqr(camera.getBlockPosition()) <= RenderTrains.DETAIL_RADIUS_SQUARED);
@@ -136,8 +144,6 @@ public class ScriptedTrainRenderer extends TrainRendererBase {
             basePose.translate(0, 1, 0);
 
             var soundPose = new Matrix4d();
-
-            var vehicleOffset = train.vehicleRidingClient.getVehicleOffset();
 
             if (vehicleOffset == null) {
                 soundPose.translate(x, y, z);

@@ -1,44 +1,29 @@
 package cn.zbx1425.mtrsteamloco.mixin;
 
+import cn.zbx1425.mtrsteamloco.util.ModExecutors;
 import net.minecraft.world.phys.Vec3;
 import mtr.data.*;
 import cn.zbx1425.mtrsteamloco.data.*;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
 import io.netty.buffer.Unpooled;
 import mtr.MTR;
 import mtr.Registry;
-import mtr.block.BlockNode;
-import mtr.mappings.PersistentStateMapper;
-import mtr.mappings.Utilities;
 import mtr.packet.*;
 import mtr.path.PathData;
-import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.BlockPos;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeColor;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.storage.LevelResource;
-import net.minecraft.world.phys.AABB;
-import org.msgpack.core.MessagePack;
-import org.msgpack.core.MessagePacker;
-import org.msgpack.core.MessageUnpacker;
-import org.msgpack.value.Value;
+
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import java.util.*;
 
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Mutable;
+import org.spongepowered.asm.mixin.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(RailwayData.class)
 public class RailwayDataMixin implements IPacket {
@@ -68,13 +53,13 @@ public class RailwayDataMixin implements IPacket {
 
 	@Shadow(remap = false) private RailwayDataFileSaveModule railwayDataFileSaveModule;
 
-	@Shadow(remap = false) private List<Map<UUID, Long>> trainPositions = new ArrayList<>(2);
-	@Shadow(remap = false) private Map<Player, BlockPos> playerLastUpdatedPositions = new HashMap<>();
-	@Shadow(remap = false) private List<Player> playersToSyncSchedules = new ArrayList<>();
+	@Shadow(remap = false) @Mutable @Final private List<Map<UUID, Long>> trainPositions = new ArrayList<>(2);
+	@Shadow(remap = false) @Mutable @Final private Map<Player, BlockPos> playerLastUpdatedPositions = new HashMap<>();
+	@Shadow(remap = false) @Mutable @Final private List<Player> playersToSyncSchedules = new ArrayList<>();
 	@Shadow(remap = false) private UpdateNearbyMovingObjects<TrainServer> updateNearbyTrains;
 	@Shadow(remap = false) private UpdateNearbyMovingObjects<LiftServer> updateNearbyLifts;
-	@Shadow(remap = false) private Map<Long, List<ScheduleEntry>> schedulesForPlatform = new HashMap<>();
-	@Shadow(remap = false) private Map<Long, Map<BlockPos, TrainDelay>> trainDelays = new HashMap<>();
+	@Shadow(remap = false) @Mutable @Final private Map<Long, List<ScheduleEntry>> schedulesForPlatform = new HashMap<>();
+	@Shadow(remap = false) @Mutable @Final private Map<Long, Map<BlockPos, TrainDelay>> trainDelays = new HashMap<>();
 
     @Shadow(remap = false) @Final @Mutable private static int RAIL_UPDATE_DISTANCE = 128;
 	@Shadow(remap = false) private static int PLAYER_MOVE_UPDATE_THRESHOLD = 16;
@@ -95,74 +80,180 @@ public class RailwayDataMixin implements IPacket {
 	@Shadow(remap = false) private static String KEY_SIGNAL_BLOCKS = "signal_blocks";
 	@Shadow(remap = false) private static String KEY_USE_TIME_AND_WIND_SYNC = "use_time_and_wind_sync";
 
-    public void simulateTrains() {
+	@Inject(method = "<init>", at = @At("TAIL"))
+	private void init(Level world, CallbackInfo ci) {
+		this.schedulesForPlatform = new ConcurrentHashMap<>(this.schedulesForPlatform);
+		this.playerLastUpdatedPositions = new ConcurrentHashMap<>(this.playerLastUpdatedPositions);
+		this.playersToSyncSchedules = Collections.synchronizedList(this.playersToSyncSchedules);
+		this.trainDelays = new ConcurrentHashMap<>(this.trainDelays);
+		this.trainPositions = Collections.synchronizedList(this.trainPositions);
+	}
 
-        RAIL_UPDATE_DISTANCE = world.getServer().getPlayerList().getViewDistance() * 16;
-		List<? extends Player> players = world.players();
-		players.forEach(player -> {
-			BlockPos playerBlockPos = player.blockPosition();
-			Vec3 playerPos = player.position();
+	@Unique
+	private void mtrSteamLoco$sendPlayersUpdates() {
+		RAIL_UPDATE_DISTANCE = world.getServer().getPlayerList().getViewDistance() * 16;
 
-			if (!playerLastUpdatedPositions.containsKey(player) || playerLastUpdatedPositions.get(player).distManhattan(playerBlockPos) > PLAYER_MOVE_UPDATE_THRESHOLD) {
-				Map<BlockPos, Map<BlockPos, Rail>> railsToAdd = new HashMap<>();
-				rails.forEach((startPos, blockPosRailMap) -> blockPosRailMap.forEach((endPos, rail) -> {
-					if (((RailExtraSupplier) (Object) rail).isBetween(playerPos.x, playerPos.y, playerPos.z, RAIL_UPDATE_DISTANCE)) {
-						if (!railsToAdd.containsKey(startPos)) {
-							railsToAdd.put(startPos, new HashMap<>());
-						}
-						railsToAdd.get(startPos).put(endPos, rail);
-					}
-				}));
+		var tasks = new ArrayList<CompletableFuture<?>>();
 
-				FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
-				packet.writeInt(railsToAdd.size());
-				railsToAdd.forEach((posStart, railMap) -> {
-					packet.writeBlockPos(posStart);
-					packet.writeInt(railMap.size());
-					railMap.forEach((posEnd, rail) -> {
-						packet.writeBlockPos(posEnd);
-						rail.writePacket(packet);
-					});
-				});
+		for (var player : world.players()) {
+			tasks.add(
+					CompletableFuture.runAsync(() -> this.mtrSteamLoco$sendPlayerUpdates(player), ModExecutors.SIMULATION)
+			);
+		}
 
-				if (packet.readableBytes() <= MAX_PACKET_BYTES) {
-					Registry.sendToPlayer((ServerPlayer) player, PACKET_WRITE_RAILS, packet);
+		try {
+			CompletableFuture.allOf(
+					tasks.toArray(new CompletableFuture<?>[0])
+			).get();
+		} catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Unique
+	private void mtrSteamLoco$sendPlayerUpdates(Player player) {
+		var playerBlockPos = player.blockPosition();
+
+		var lastPos = playerLastUpdatedPositions.get(player);
+
+		if (lastPos != null && lastPos.distManhattan(playerBlockPos) <= PLAYER_MOVE_UPDATE_THRESHOLD) {
+			return;
+		}
+
+		playerLastUpdatedPositions.put(player, playerBlockPos);
+
+		var size = 0;
+		var packet = new FriendlyByteBuf(Unpooled.buffer());
+
+		var sizeIdx = packet.writerIndex();
+		packet.writeInt(0);
+
+		for (var endPositions : rails.entrySet()) {
+			var startPos = endPositions.getKey();
+
+			packet.writeBlockPos(startPos);
+
+			var railCountIdx = packet.writerIndex();
+			packet.writeInt(0);
+
+			var railCount = 0;
+
+			for (var entry : endPositions.getValue().entrySet()) {
+				var endPos = entry.getKey();
+				var rail = entry.getValue();
+
+				if (!((RailExtraSupplier) rail).isBetween(player.getX(), player.getY(), player.getZ(), RAIL_UPDATE_DISTANCE)) {
+					continue;
 				}
-				playerLastUpdatedPositions.put(player, playerBlockPos);
-			}
-		});
 
-		updateNearbyTrains.startTick();
+				packet.writeBlockPos(endPos);
+				rail.writePacket(packet);
+
+				railCount++;
+			}
+
+			packet.setInt(railCountIdx, railCount);
+
+			size++;
+		}
+
+		if (packet.readableBytes() > MAX_PACKET_BYTES) {
+			return;
+		}
+
+		packet.setInt(sizeIdx, size);
+
+		Registry.sendToPlayer((ServerPlayer) player, PACKET_WRITE_RAILS, packet);
+	}
+
+	@Unique
+	private void mtrSteamLoco$tickSidings() {
+		schedulesForPlatform.clear();
+
 		trainPositions.remove(0);
 		trainPositions.add(new HashMap<>());
-		schedulesForPlatform.clear();
-		signalBlocks.resetOccupied();
+
 		sidings.forEach(siding -> {
 			siding.setSidingData(world, dataCache.sidingIdToDepot.get(siding.id), rails);
 			siding.simulateTrain(dataCache, railwayDataDriveTrainModule, trainPositions, signalBlocks, updateNearbyTrains.newDataSetInPlayerRange, updateNearbyTrains.dataSetToSync, schedulesForPlatform, trainDelays);
 		});
-		depots.forEach(depot -> depot.deployTrain((RailwayData)(Object) this, world));
+	}
 
-		updateNearbyLifts.startTick();
-		lifts.forEach(lift -> lift.tickServer(world, updateNearbyLifts.newDataSetInPlayerRange, updateNearbyLifts.dataSetToSync));
-
-		railwayDataCoolDownModule.tick();
-		railwayDataDriveTrainModule.tick();
-		railwayDataRailActionsModule.tick();
-		railwayDataRouteFinderModule.tick();
-		updateNearbyTrains.tick();
-		if (sidings.size() > 0) {
-			
+	@Unique
+	private void mtrSteamLoco$updateSchedule() {
+		if (!MTR.isGameTickInterval(SCHEDULE_UPDATE_TICKS)) {
+			return;
 		}
-		updateNearbyLifts.tick();
 
-		if (MTR.isGameTickInterval(SCHEDULE_UPDATE_TICKS)) {
-			players.forEach(player -> {
-				if (!playersToSyncSchedules.contains(player)) {
-					playersToSyncSchedules.add(player);
-				}
-			});
+		world.players().forEach(player -> {
+			if (!playersToSyncSchedules.contains(player)) {
+				playersToSyncSchedules.add(player);
+			}
+		});
+	}
+
+    public void simulateTrains() {
+        var tasks = new ArrayList<CompletableFuture<?>>();
+
+		tasks.add(
+				CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.SIMULATION)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.SIMULATION)
+						.thenRun(() -> lifts.forEach(lift -> lift.tickServer(world, updateNearbyLifts.newDataSetInPlayerRange, updateNearbyLifts.dataSetToSync)))
+						.thenRun(updateNearbyLifts::tick)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(signalBlocks::resetOccupied, ModExecutors.SIMULATION)
+		);
+
+		updateNearbyTrains.startTick();
+		this.mtrSteamLoco$tickSidings();
+
+		tasks.add(
+				CompletableFuture.runAsync(
+						() -> depots.forEach(depot -> depot.deployTrain((RailwayData)(Object) this, world)),
+						ModExecutors.SIMULATION
+				).thenRun(updateNearbyTrains::tick)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(railwayDataCoolDownModule::tick, ModExecutors.SIMULATION)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(railwayDataDriveTrainModule::tick, ModExecutors.SIMULATION)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(railwayDataRailActionsModule::tick, ModExecutors.SIMULATION)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.SIMULATION)
+		);
+
+		tasks.add(
+				CompletableFuture.runAsync(railwayDataFileSaveModule::autoSaveTick, ModExecutors.SIMULATION)
+		);
+
+        try {
+            CompletableFuture.allOf(
+                    tasks.toArray(new CompletableFuture<?>[0])
+            ).get();
+        } catch (InterruptedException | ExecutionException e) {
+			throw new RuntimeException(e);
 		}
+
+        prevPlatformCount = platforms.size();
+		prevSidingCount = sidings.size();
+
 		if (!playersToSyncSchedules.isEmpty()) {
 			Player player = playersToSyncSchedules.remove(0);
 			BlockPos playerBlockPos = player.blockPosition();
@@ -224,9 +315,5 @@ public class RailwayDataMixin implements IPacket {
 		if (prevPlatformCount != platforms.size() || prevSidingCount != sidings.size()) {
 			dataCache.sync();
 		}
-		prevPlatformCount = platforms.size();
-		prevSidingCount = sidings.size();
-
-		railwayDataFileSaveModule.autoSaveTick();
-	}
+    }
 }

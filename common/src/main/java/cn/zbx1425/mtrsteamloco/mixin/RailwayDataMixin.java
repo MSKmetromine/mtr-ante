@@ -374,9 +374,7 @@ public class RailwayDataMixin implements IPacket {
 				CompletableFuture.runAsync(railwayDataDriveTrainModule::tick, ModExecutors.SIMULATION)
 		);
 
-		tasks.add(
-				CompletableFuture.runAsync(railwayDataRailActionsModule::tick, ModExecutors.SIMULATION)
-		);
+		railwayDataRailActionsModule.tick();
 
 		tasks.add(
 				CompletableFuture.runAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION)
@@ -401,7 +399,7 @@ public class RailwayDataMixin implements IPacket {
         } catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error during async simulation.", e);
 		} catch (TimeoutException e) {
-			throw new RuntimeException("Timed out waiting for async simulation to finish.", e);
+			throw new RuntimeException("Timed out waiting for async simulation to finish. " + tasks, e);
 		}
     }
 }

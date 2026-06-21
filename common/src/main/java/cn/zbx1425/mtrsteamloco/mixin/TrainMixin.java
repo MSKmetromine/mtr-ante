@@ -262,6 +262,11 @@ public abstract class TrainMixin implements TrainExtraSupplier{
             for (int checkY = -2; checkY <= 3; checkY++) {
                 for (double checkZ = -halfSpacing; checkZ <= halfSpacing; checkZ++) {
                     final BlockPos checkPos = RailwayData.newBlockPos(trainX + offsetVec.x * checkX + traverseVec.x * checkZ, trainY + checkY, trainZ + offsetVec.z * checkX + traverseVec.z * checkZ);
+
+                    if (!RailwayData.chunkLoaded(world, checkPos)) {
+                        continue;
+                    }
+
                     final Block block = world.getBlockState(checkPos).getBlock();
 
                     if (block instanceof BlockPlatform || block instanceof BlockPSDAPGBase || IBlockPlatformClass.isInstance(block)) {

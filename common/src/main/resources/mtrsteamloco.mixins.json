@@ -6,6 +6,7 @@
   "client": [
     "BlockNodeMixin",
     "CameraMixin",
+    "CatenaryMixin",
     "ClientCacheAccessor",
     "CustomResourcesMixin",
     "DynamicImageAccessor",
@@ -23,11 +24,17 @@
     "ModelSimpleTrainBaseAccessor",
     "NativeImageAccessor",
     "RailAccessor",
+    "RenderPSDAPGDoorMixin",
     "RenderRailwaySignMixin",
+    "RenderRouteBaseMixin",
+    "RenderSPBHorizontalElevatorDoorMixin",
+    "RenderStationNameBaseMixin",
     "RenderTrainsAccessor",
     "RenderTrainsMixin",
+    "RenderYamanoteRailwaySignMixin",
     "ResourcePackCreatorPropertiesMixin",
     "ResourcePackCreatorScreenMixin",
+    "RigidCatenaryMixin",
     "SidingScreenMixin",
     "TrainAccessor",
     "TrainClientAccessor",
@@ -35,16 +42,9 @@
     "TrainClientRegistryMixin",
     "TrainRendererBaseAccessor",
     "TrainRendererBaseMixin",
-    "VehicleRidingClientMixin",
-    "WidgetMapMixin",
-    "RigidCatenaryMixin",
-    "CatenaryMixin",
     "TransCatenaryMixin",
-    "RenderPSDAPGDoorMixin",
-    "RenderSPBHorizontalElevatorDoorMixin",
-    "RenderRouteBaseMixin",
-    "RenderStationNameBaseMixin",
-    "RenderYamanoteRailwaySignMixin"
+    "VehicleRidingClientMixin",
+    "WidgetMapMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -69,7 +69,8 @@
     "RouteMixin",
     "SidingAccessor",
     "SidingMixin",
-    "TrainMixin"
+    "TrainMixin",
+    "TrainServerMixin"
   ],
   "server": [
   ]

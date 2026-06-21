@@ -375,10 +375,6 @@ public class RailwayDataMixin implements IPacket {
 		);
 
 		tasks.add(
-				CompletableFuture.runAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION)
-		);
-
-		tasks.add(
 				CompletableFuture.runAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.SIMULATION)
 		);
 
@@ -400,6 +396,7 @@ public class RailwayDataMixin implements IPacket {
 			throw new RuntimeException("Timed out waiting for async simulation to finish. " + tasks, e);
 		}
 
+		railwayDataRouteFinderModule.tick();
 		railwayDataRailActionsModule.tick();
     }
 }

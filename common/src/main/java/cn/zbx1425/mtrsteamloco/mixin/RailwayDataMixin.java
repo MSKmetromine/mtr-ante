@@ -274,6 +274,8 @@ public class RailwayDataMixin implements IPacket {
 					if (scheduleEntries == null) {
 						packet.writeInt(0);
 					} else {
+						scheduleEntries = new ArrayList<>(scheduleEntries);
+
 						packet.writeInt(scheduleEntries.size());
 						scheduleEntries.forEach(scheduleEntry -> scheduleEntry.writePacket(packet));
 					}

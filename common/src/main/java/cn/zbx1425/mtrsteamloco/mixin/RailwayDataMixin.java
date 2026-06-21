@@ -259,10 +259,6 @@ public class RailwayDataMixin implements IPacket {
 				}
 			}));
 
-			if (trainPositions.size() < 2) {
-				return;
-			}
-
 			Map<Long, Boolean> signalBlockStatus = new HashMap<>();
 			Map<UUID, Boolean> occupiedRails = new HashMap<>();
 			railsToAdd.forEach(rail -> {
@@ -371,6 +367,8 @@ public class RailwayDataMixin implements IPacket {
                             }
 						}, ModExecutors.SIMULATION)
 						.thenRunAsync(updateNearbyTrains::tick, ModExecutors.SIMULATION)
+						.thenRunAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.SIMULATION)
+						.thenRunAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION)
 		);
 
 		tasks.add(
@@ -392,15 +390,13 @@ public class RailwayDataMixin implements IPacket {
         try {
             CompletableFuture.allOf(
                     tasks.toArray(new CompletableFuture<?>[0])
-            ).get(10L, TimeUnit.SECONDS);
+            ).get(120L, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error during async simulation.", e);
 		} catch (TimeoutException e) {
 			throw new RuntimeException("Timed out waiting for async simulation to finish. " + tasks, e);
 		}
 
-		this.mtrSteamLoco$updateSchedule();
-		railwayDataRouteFinderModule.tick();
 		railwayDataRailActionsModule.tick();
     }
 }

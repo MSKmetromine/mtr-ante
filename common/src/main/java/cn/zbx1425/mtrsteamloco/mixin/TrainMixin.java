@@ -30,6 +30,7 @@ import mtr.data.*;
 
 import java.util.*;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -50,6 +51,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
     private CustomTrainType customTrainType;
     private CarPosition[] carPositions;
+
+    private AtomicBoolean doorsLeft;
+    private AtomicBoolean doorsRight;
 
     @Override
     public Map<String, String> getCustomConfigs() {
@@ -138,6 +142,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @Final
     public long sidingId;
 
+    @Shadow
+    protected abstract boolean scanDoors(Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks);
+
     @Override
     public float getRollAngleAt(double value) {
         int i = getIndex(value, true);
@@ -151,6 +158,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     private void fromDefinitions(long id, long sidingId, float railLength, String trainId, String baseTrainType, int trainCars, List<PathData> path, List<Double> distances, int repeatIndex1, int repeatIndex2, float accelerationConstant, boolean isManualAllowed, int maxManualSpeed, int manualToAutomaticTime, CallbackInfo ci) {
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
+        this.doorsLeft = new AtomicBoolean();
+        this.doorsRight = new AtomicBoolean();
     }
 
     @Inject(method = "<init>(JFLjava/util/List;Ljava/util/List;IIFZIILjava/util/Map;)V", at = @At("TAIL"), remap = false)
@@ -169,6 +178,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
+        this.doorsLeft = new AtomicBoolean();
+        this.doorsRight = new AtomicBoolean();
     }
 
     @Inject(method = "<init>(JFLjava/util/List;Ljava/util/List;IIFZIILnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
@@ -186,6 +197,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
+        this.doorsLeft = new AtomicBoolean();
+        this.doorsRight = new AtomicBoolean();
     }
 
     @Inject(method = "<init>(Lnet/minecraft/network/FriendlyByteBuf;)V", at = @At("TAIL"))
@@ -198,6 +211,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
+        this.doorsLeft = new AtomicBoolean();
+        this.doorsRight = new AtomicBoolean();
     }
 
     @Inject(method = "toMessagePack", at = @At("TAIL"), remap = false)
@@ -486,5 +501,35 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         }
 
         return ((SidingExtraSupplier) siding).isDecelerationConstantEnabled() ? ((SidingExtraSupplier) siding).getDecelerationConstant() : original.call(instance);
+    }
+
+    @Redirect(method = "calculateCar", at = @At(value = "INVOKE", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", ordinal = 0))
+    public boolean calculateCarScanDoors0(Train instance, Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks) {
+        Runnable runnable = () -> this.doorsLeft.set(
+                this.scanDoors(world, trainX, trainY, trainZ, checkYaw, pitch, halfSpacing, dwellTicks)
+        );
+
+        if (!world.isClientSide()) {
+            world.getServer().execute(runnable);
+        } else {
+            runnable.run();
+        }
+
+        return this.doorsLeft.get();
+    }
+
+    @Redirect(method = "calculateCar", at = @At(value = "INVOKE", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", ordinal = 1))
+    public boolean calculateCarScanDoors1(Train instance, Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks) {
+        Runnable runnable = () -> this.doorsRight.set(
+                this.scanDoors(world, trainX, trainY, trainZ, checkYaw, pitch, halfSpacing, dwellTicks)
+        );
+
+        if (!world.isClientSide()) {
+            world.getServer().execute(runnable);
+        } else {
+            runnable.run();
+        }
+
+        return this.doorsRight.get();
     }
 }

@@ -91,23 +91,58 @@ public class RailwayDataMixin implements IPacket {
 
 	@Unique
 	private void mtrSteamLoco$sendPlayersUpdates() {
+//		RAIL_UPDATE_DISTANCE = world.getServer().getPlayerList().getViewDistance() * 16;
+//
+//		var tasks = new ArrayList<CompletableFuture<?>>();
+//
+//		for (var player : world.players()) {
+//			tasks.add(
+//					CompletableFuture.runAsync(() -> this.mtrSteamLoco$sendPlayerUpdates(player), ModExecutors.SIMULATION)
+//			);
+//		}
+//
+//		try {
+//			CompletableFuture.allOf(
+//					tasks.toArray(new CompletableFuture<?>[0])
+//			).get();
+//		} catch (InterruptedException | ExecutionException e) {
+//			throw new RuntimeException(e);
+//		}
+
 		RAIL_UPDATE_DISTANCE = world.getServer().getPlayerList().getViewDistance() * 16;
+		List<? extends Player> players = world.players();
+		players.forEach(player -> {
+			BlockPos playerBlockPos = player.blockPosition();
+			Vec3 playerPos = player.position();
 
-		var tasks = new ArrayList<CompletableFuture<?>>();
+			if (!playerLastUpdatedPositions.containsKey(player) || playerLastUpdatedPositions.get(player).distManhattan(playerBlockPos) > PLAYER_MOVE_UPDATE_THRESHOLD) {
+				Map<BlockPos, Map<BlockPos, Rail>> railsToAdd = new HashMap<>();
+				rails.forEach((startPos, blockPosRailMap) -> blockPosRailMap.forEach((endPos, rail) -> {
+					if (((RailExtraSupplier) (Object) rail).isBetween(playerPos.x, playerPos.y, playerPos.z, RAIL_UPDATE_DISTANCE)) {
+						if (!railsToAdd.containsKey(startPos)) {
+							railsToAdd.put(startPos, new HashMap<>());
+						}
+						railsToAdd.get(startPos).put(endPos, rail);
+					}
+				}));
 
-		for (var player : world.players()) {
-			tasks.add(
-					CompletableFuture.runAsync(() -> this.mtrSteamLoco$sendPlayerUpdates(player), ModExecutors.SIMULATION)
-			);
-		}
+				FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
+				packet.writeInt(railsToAdd.size());
+				railsToAdd.forEach((posStart, railMap) -> {
+					packet.writeBlockPos(posStart);
+					packet.writeInt(railMap.size());
+					railMap.forEach((posEnd, rail) -> {
+						packet.writeBlockPos(posEnd);
+						rail.writePacket(packet);
+					});
+				});
 
-		try {
-			CompletableFuture.allOf(
-					tasks.toArray(new CompletableFuture<?>[0])
-			).get();
-		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
-		}
+				if (packet.readableBytes() <= MAX_PACKET_BYTES) {
+					Registry.sendToPlayer((ServerPlayer) player, PACKET_WRITE_RAILS, packet);
+				}
+				playerLastUpdatedPositions.put(player, playerBlockPos);
+			}
+		});
 	}
 
 	@Unique
@@ -193,46 +228,11 @@ public class RailwayDataMixin implements IPacket {
 	}
 
     public void simulateTrains() {
-		RAIL_UPDATE_DISTANCE = world.getServer().getPlayerList().getViewDistance() * 16;
-		List<? extends Player> players = world.players();
-		players.forEach(player -> {
-			BlockPos playerBlockPos = player.blockPosition();
-			Vec3 playerPos = player.position();
-
-			if (!playerLastUpdatedPositions.containsKey(player) || playerLastUpdatedPositions.get(player).distManhattan(playerBlockPos) > PLAYER_MOVE_UPDATE_THRESHOLD) {
-				Map<BlockPos, Map<BlockPos, Rail>> railsToAdd = new HashMap<>();
-				rails.forEach((startPos, blockPosRailMap) -> blockPosRailMap.forEach((endPos, rail) -> {
-					if (((RailExtraSupplier) (Object) rail).isBetween(playerPos.x, playerPos.y, playerPos.z, RAIL_UPDATE_DISTANCE)) {
-						if (!railsToAdd.containsKey(startPos)) {
-							railsToAdd.put(startPos, new HashMap<>());
-						}
-						railsToAdd.get(startPos).put(endPos, rail);
-					}
-				}));
-
-				FriendlyByteBuf packet = new FriendlyByteBuf(Unpooled.buffer());
-				packet.writeInt(railsToAdd.size());
-				railsToAdd.forEach((posStart, railMap) -> {
-					packet.writeBlockPos(posStart);
-					packet.writeInt(railMap.size());
-					railMap.forEach((posEnd, rail) -> {
-						packet.writeBlockPos(posEnd);
-						rail.writePacket(packet);
-					});
-				});
-
-				if (packet.readableBytes() <= MAX_PACKET_BYTES) {
-					Registry.sendToPlayer((ServerPlayer) player, PACKET_WRITE_RAILS, packet);
-				}
-				playerLastUpdatedPositions.put(player, playerBlockPos);
-			}
-		});
-
 		var tasks = new ArrayList<CompletableFuture<?>>();
 
-//		tasks.add(
-//				CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.SIMULATION)
-//		);
+		tasks.add(
+				CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.SIMULATION)
+		);
 
 		tasks.add(
 				CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.SIMULATION)

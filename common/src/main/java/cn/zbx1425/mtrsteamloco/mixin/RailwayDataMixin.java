@@ -246,9 +246,11 @@ public class RailwayDataMixin implements IPacket {
         try {
             CompletableFuture.allOf(
                     tasks.toArray(new CompletableFuture<?>[0])
-            ).get();
+            ).get(10L, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
+			throw new RuntimeException("Error during async simulation.", e);
+		} catch (TimeoutException e) {
+			throw new RuntimeException("Timed out waiting for async simulation to finish.", e);
 		}
 
         prevPlatformCount = platforms.size();

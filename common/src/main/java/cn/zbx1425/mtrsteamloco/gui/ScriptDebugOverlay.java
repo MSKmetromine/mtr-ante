@@ -92,7 +92,7 @@ public class ScriptDebugOverlay {
                     y = drawText(vdStuff, font, info.toString(), 5, y, 0xFFFF8888);
                 }
             } else {
-                y = drawText(vdStuff, font, holder.name, 0, y, 0xFFAAAAFF);
+                y = drawText(vdStuff, font, holder.name != null ? holder.name : "null", 0, y, 0xFFAAAAFF);
             }
             for (AbstractScriptContext context : entry.getValue()) {
                 if (y >= maxy) break;

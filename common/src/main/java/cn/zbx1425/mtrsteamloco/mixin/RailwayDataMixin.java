@@ -211,7 +211,7 @@ public class RailwayDataMixin implements IPacket {
 		schedulesForPlatform.clear();
 
 		trainPositions.remove(0);
-		trainPositions.add(new HashMap<>());
+		trainPositions.add(new ConcurrentHashMap<>());
 
 		var tasks = new CompletableFuture[sidings.size()];
 		var iterator = sidings.iterator();

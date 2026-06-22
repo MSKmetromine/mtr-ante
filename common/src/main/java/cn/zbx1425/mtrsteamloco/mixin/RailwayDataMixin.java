@@ -221,7 +221,7 @@ public class RailwayDataMixin implements IPacket {
 
 			tasks[i] = CompletableFuture.runAsync(() -> {
 				siding.setSidingData(world, dataCache.sidingIdToDepot.get(siding.id), rails);
-				siding.simulateTrain(dataCache, railwayDataDriveTrainModule, trainPositions, signalBlocks, updateNearbyTrains.newDataSetInPlayerRange, updateNearbyTrains.dataSetToSync, schedulesForPlatform, trainDelays);
+//				siding.simulateTrain(dataCache, railwayDataDriveTrainModule, trainPositions, signalBlocks, updateNearbyTrains.newDataSetInPlayerRange, updateNearbyTrains.dataSetToSync, schedulesForPlatform, trainDelays);
 			}, ModExecutors.SIMULATION);
 		}
 

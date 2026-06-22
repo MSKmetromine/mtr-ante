@@ -453,6 +453,11 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         return this.carPositions[index].car().pitch();
     }
 
+    @Inject(method = "simulateTrain", at = @At("HEAD"), cancellable = true)
+    public void simulateTrain(Level world, float ticksElapsed, Depot depot, CallbackInfo ci) {
+        ci.cancel();
+    }
+
     @WrapOperation(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;getRailSpeed(I)F"), remap = false)
     public float wrapRailSpeed(Train instance, int railIndex, Operation<Float> original, Level world) {
         DataCache cache;

@@ -311,90 +311,103 @@ public class RailwayDataMixin implements IPacket {
 	}
 
     public void simulateTrains() {
-		var tasks = new ArrayList<CompletableFuture<?>>();
+		var sendPlayersUpdatesTask = CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.SIMULATION);
+		var updateNearbyLiftsStartTask = CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.SIMULATION);
 
-		tasks.add(
-				CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.SIMULATION)
-		);
+		var tickLiftsTask = updateNearbyLiftsStartTask.thenRunAsync(() -> {
+			var liftTasks = new CompletableFuture[lifts.size()];
+			var iterator = lifts.iterator();
 
-		tasks.add(
-				CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.SIMULATION)
-						.thenRunAsync(() -> {
-							var liftTasks = new CompletableFuture[lifts.size()];
-							var iterator = lifts.iterator();
+			for (var i = 0; i < liftTasks.length; i++) {
+				var lift = iterator.next();
 
-							for (var i = 0; i < liftTasks.length; i++) {
-								var lift = iterator.next();
+				liftTasks[i] = CompletableFuture.runAsync(() -> {
+					lift.tickServer(world, updateNearbyLifts.newDataSetInPlayerRange, updateNearbyLifts.dataSetToSync);
+				}, ModExecutors.SIMULATION);
+			}
 
-								liftTasks[i] = CompletableFuture.runAsync(() -> {
-									lift.tickServer(world, updateNearbyLifts.newDataSetInPlayerRange, updateNearbyLifts.dataSetToSync);
-								}, ModExecutors.SIMULATION);
-							}
+			try {
+				CompletableFuture.allOf(liftTasks).get();
+			} catch (InterruptedException | ExecutionException e) {
+				throw new RuntimeException(e);
+			}
+		}, ModExecutors.SIMULATION);
 
-							try {
-								CompletableFuture.allOf(liftTasks).get();
-							} catch (InterruptedException | ExecutionException e) {
-								throw new RuntimeException(e);
-							}
-						}, ModExecutors.SIMULATION)
-						.thenRunAsync(updateNearbyLifts::tick, ModExecutors.SIMULATION)
-		);
+		var updateNearbyLiftsTask = tickLiftsTask.thenRunAsync(updateNearbyLifts::tick, ModExecutors.SIMULATION);
+		var resetOccupiedTask = CompletableFuture.runAsync(signalBlocks::resetOccupied, ModExecutors.SIMULATION);
+		var updateNearbyTrainsStartTask = CompletableFuture.runAsync(updateNearbyTrains::startTick, ModExecutors.SIMULATION);
+		var tickSidingsTask = updateNearbyTrainsStartTask.thenRunAsync(this::mtrSteamLoco$tickSidings, ModExecutors.SIMULATION);
 
-		tasks.add(
-				CompletableFuture.runAsync(signalBlocks::resetOccupied, ModExecutors.SIMULATION)
-		);
+		var deployTrainsTask = tickSidingsTask.thenRunAsync(() -> {
+			var depotTasks = new CompletableFuture[depots.size()];
+			var iterator = depots.iterator();
 
-		tasks.add(
-				CompletableFuture
-						.runAsync(updateNearbyTrains::startTick, ModExecutors.SIMULATION)
-						.thenRunAsync(this::mtrSteamLoco$tickSidings, ModExecutors.SIMULATION)
-						.thenRunAsync(() -> {
-							var depotTasks = new CompletableFuture[depots.size()];
-							var iterator = depots.iterator();
+			for (var i = 0; i < depotTasks.length; i++) {
+				var depot = iterator.next();
 
-							for (var i = 0; i < depotTasks.length; i++) {
-								var depot = iterator.next();
+				depotTasks[i] = CompletableFuture.runAsync(() -> {
+					depot.deployTrain((RailwayData) (Object) this, world);
+				}, ModExecutors.SIMULATION);
+			}
 
-								depotTasks[i] = CompletableFuture.runAsync(() -> {
-									depot.deployTrain((RailwayData) (Object) this, world);
-								}, ModExecutors.SIMULATION);
-							}
+			try {
+				CompletableFuture.allOf(depotTasks).get();
+			} catch (InterruptedException | ExecutionException e) {
+				throw new RuntimeException(e);
+			}
+		}, ModExecutors.SIMULATION);
 
-                            try {
-                                CompletableFuture.allOf(depotTasks).get();
-                            } catch (InterruptedException | ExecutionException e) {
-                                throw new RuntimeException(e);
-                            }
-						}, ModExecutors.SIMULATION)
-						.thenRunAsync(updateNearbyTrains::tick, ModExecutors.SIMULATION)
-						.thenRunAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.SIMULATION)
-						.thenRunAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION)
-		);
+		var updateNearbyTrainsTask = deployTrainsTask.thenRunAsync(updateNearbyTrains::tick, ModExecutors.SIMULATION);
+		var updateScheduleTask = updateNearbyTrainsTask.thenRunAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.SIMULATION);
+		var routeFinderTask = updateScheduleTask.thenRunAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION);
 
-		tasks.add(
-				CompletableFuture.runAsync(railwayDataCoolDownModule::tick, ModExecutors.SIMULATION)
-		);
+		var cooldownTask = CompletableFuture.runAsync(railwayDataCoolDownModule::tick, ModExecutors.SIMULATION);
+		var driveTrainTask = CompletableFuture.runAsync(railwayDataDriveTrainModule::tick, ModExecutors.SIMULATION);
 
-		tasks.add(
-				CompletableFuture.runAsync(railwayDataDriveTrainModule::tick, ModExecutors.SIMULATION)
-		);
+		var autoSaveTask = CompletableFuture.runAsync(railwayDataFileSaveModule::autoSaveTick, ModExecutors.SIMULATION);
 
-		tasks.add(
-				CompletableFuture.runAsync(railwayDataFileSaveModule::autoSaveTick, ModExecutors.SIMULATION)
-		);
-
-		tasks.add(
-				CompletableFuture.runAsync(this::mtrSteamLoco$syncDataCache, ModExecutors.SIMULATION)
-		);
+		var syncDataCacheTask = CompletableFuture.runAsync(this::mtrSteamLoco$syncDataCache, ModExecutors.SIMULATION);
 
         try {
             CompletableFuture.allOf(
-                    tasks.toArray(new CompletableFuture<?>[0])
+                    sendPlayersUpdatesTask,
+					updateNearbyLiftsStartTask,
+					tickLiftsTask,
+					updateNearbyLiftsTask,
+					resetOccupiedTask,
+					updateNearbyTrainsStartTask,
+					tickSidingsTask,
+					deployTrainsTask,
+					updateNearbyTrainsTask,
+					updateScheduleTask,
+					routeFinderTask,
+					cooldownTask,
+					driveTrainTask,
+					autoSaveTask,
+					syncDataCacheTask
             ).get(5L, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error during async simulation.", e);
 		} catch (TimeoutException e) {
-			throw new RuntimeException("Timed out waiting for async simulation to finish. " + tasks, e);
+
+            String tasksSummary =
+					"sendPlayersUpdatesTask = " + sendPlayersUpdatesTask + "; " +
+                    "updateNearbyLiftsStartTask = " + updateNearbyLiftsStartTask + "; " +
+                    "tickLiftsTask = " + tickLiftsTask + "; " +
+                    "updateNearbyLiftsTask = " + updateNearbyLiftsTask + "; " +
+                    "resetOccupiedTask = " + resetOccupiedTask + "; " +
+                    "updateNearbyTrainsStartTask = " + updateNearbyTrainsStartTask + "; " +
+                    "tickSidingsTask = " + tickSidingsTask + "; " +
+                    "deployTrainsTask = " + deployTrainsTask + "; " +
+                    "updateNearbyTrainsTask = " + updateNearbyTrainsTask + "; " +
+                    "updateScheduleTask = " + updateScheduleTask + "; " +
+                    "routeFinderTask = " + routeFinderTask + "; " +
+                    "cooldownTask = " + cooldownTask + "; " +
+                    "driveTrainTask = " + driveTrainTask + "; " +
+                    "autoSaveTask = " + autoSaveTask + "; " +
+                    "syncDataCacheTask = " + syncDataCacheTask;
+
+			throw new RuntimeException("Timed out waiting for async simulation to finish. " + tasksSummary, e);
 		}
 
 		railwayDataRailActionsModule.tick();

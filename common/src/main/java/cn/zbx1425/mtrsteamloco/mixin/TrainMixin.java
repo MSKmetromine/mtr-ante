@@ -453,9 +453,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         return this.carPositions[index].car().pitch();
     }
 
-    @Inject(method = "simulateTrain", at = @At("HEAD"), cancellable = true)
-    public void simulateTrain(Level world, float ticksElapsed, Depot depot, CallbackInfo ci) {
-        ci.cancel();
+    @Redirect(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;handlePositions(Lnet/minecraft/world/level/Level;[Lnet/minecraft/world/phys/Vec3;F)Z"))
+    public boolean simulateTrain(Train instance, Level level, Vec3[] vec3s, float v) {
+        return false;
     }
 
     @WrapOperation(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;getRailSpeed(I)F"), remap = false)

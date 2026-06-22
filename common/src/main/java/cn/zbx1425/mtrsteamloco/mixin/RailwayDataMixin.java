@@ -390,7 +390,7 @@ public class RailwayDataMixin implements IPacket {
         try {
             CompletableFuture.allOf(
                     tasks.toArray(new CompletableFuture<?>[0])
-            ).get(120L, TimeUnit.SECONDS);
+            ).get(5L, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error during async simulation.", e);
 		} catch (TimeoutException e) {

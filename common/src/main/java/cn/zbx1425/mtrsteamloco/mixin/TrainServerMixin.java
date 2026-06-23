@@ -5,10 +5,13 @@ import mtr.block.*;
 import mtr.data.RailwayData;
 import mtr.data.Train;
 import mtr.data.TrainServer;
+import mtr.data.VehicleRidingServer;
 import mtr.path.PathData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.Container;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -19,10 +22,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Mixin(TrainServer.class)
 public abstract class TrainServerMixin extends Train {
@@ -40,6 +42,9 @@ public abstract class TrainServerMixin extends Train {
 
     @Shadow
     protected abstract void checkBlock(BlockPos pos, Consumer<BlockPos> callback);
+
+    @Shadow
+    private int manualCoolDown;
 
     @Redirect(method = "simulateTrain", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object simulateTrainNewHashMap(Map<Object, Object> instance, Object k, Object v) {
@@ -95,5 +100,12 @@ public abstract class TrainServerMixin extends Train {
         });
 
         return false;
+    }
+
+    @Redirect(method = "simulateCar", at = @At(value = "INVOKE", target = "Lmtr/data/VehicleRidingServer;mountRider(Lnet/minecraft/world/level/Level;Ljava/util/Set;JJDDDDDFFZZILnet/minecraft/resources/ResourceLocation;Ljava/util/function/Function;Ljava/util/function/Consumer;)V"))
+    private void simulateCarMountRider(Level world, Set<UUID> ridingEntities, long id, long routeId, double carX, double carY, double carZ, double length, double width, float carYaw, float carPitch, boolean doorOpen, boolean canMount, int percentageOffset, ResourceLocation packetId, Function<Player, Boolean> canRide, Consumer<Player> ridingCallback) {
+        world.getServer().execute(() -> {
+            VehicleRidingServer.mountRider(world, ridingEntities, id, routeId, carX, carY, carZ, length, width, carYaw, carPitch, doorOpen, canMount, percentageOffset, packetId, canRide, ridingCallback);
+        });
     }
 }

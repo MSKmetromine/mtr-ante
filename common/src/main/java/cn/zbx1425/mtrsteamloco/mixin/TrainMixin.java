@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Mutable;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -145,6 +146,11 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @Shadow
     protected abstract boolean scanDoors(Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks);
 
+    @Mutable
+    @Shadow
+    @Final
+    protected Set<UUID> ridingEntities;
+
     @Override
     public float getRollAngleAt(double value) {
         int i = getIndex(value, true);
@@ -160,6 +166,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         this.carPositions = new CarPosition[this.trainCars];
         this.doorsLeft = new AtomicBoolean();
         this.doorsRight = new AtomicBoolean();
+        this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
     @Inject(method = "<init>(JFLjava/util/List;Ljava/util/List;IIFZIILjava/util/Map;)V", at = @At("TAIL"), remap = false)
@@ -180,6 +187,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         this.carPositions = new CarPosition[this.trainCars];
         this.doorsLeft = new AtomicBoolean();
         this.doorsRight = new AtomicBoolean();
+        this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
     @Inject(method = "<init>(JFLjava/util/List;Ljava/util/List;IIFZIILnet/minecraft/nbt/CompoundTag;)V", at = @At("TAIL"))
@@ -199,6 +207,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         this.carPositions = new CarPosition[this.trainCars];
         this.doorsLeft = new AtomicBoolean();
         this.doorsRight = new AtomicBoolean();
+        this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
     @Inject(method = "<init>(Lnet/minecraft/network/FriendlyByteBuf;)V", at = @At("TAIL"))
@@ -213,6 +222,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         this.carPositions = new CarPosition[this.trainCars];
         this.doorsLeft = new AtomicBoolean();
         this.doorsRight = new AtomicBoolean();
+        this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
     @Inject(method = "toMessagePack", at = @At("TAIL"), remap = false)
@@ -451,11 +461,6 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @ModifyVariable(method = "calculateCar", at = @At(value = "INVOKE_ASSIGN", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", shift = At.Shift.BEFORE), name = "pitch", ordinal = 1)
     public float modifyCalculateCarPitch(float value, Level world, Vec3[] positions, int index, int dwellTicks) {
         return this.carPositions[index].car().pitch();
-    }
-
-    @Inject(method = "lambda$simulateTrain$2", at = @At("HEAD"), cancellable = true)
-    public void simulateTrain(Level world, int ridingCar, float ticksElapsed, double[] prevX, double[] prevY, double[] prevZ, float[] prevYaw, float[] prevPitch, double x, double y, double z, float yaw, float pitch, double realSpacing, boolean doorLeftOpen, boolean doorRightOpen, CallbackInfo ci) {
-        ci.cancel();
     }
 
     @WrapOperation(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;getRailSpeed(I)F"), remap = false)

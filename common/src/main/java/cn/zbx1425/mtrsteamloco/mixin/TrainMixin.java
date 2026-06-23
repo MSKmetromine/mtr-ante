@@ -145,9 +145,6 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     @Shadow
     protected abstract boolean scanDoors(Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks);
 
-    @Shadow
-    protected abstract boolean handlePositions(Level level, Vec3[] vec3s, float v);
-
     @Override
     public float getRollAngleAt(double value) {
         int i = getIndex(value, true);
@@ -456,10 +453,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
         return this.carPositions[index].car().pitch();
     }
 
-    @Redirect(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;handlePositions(Lnet/minecraft/world/level/Level;[Lnet/minecraft/world/phys/Vec3;F)Z"))
-    public boolean simulateTrain(Train instance, Level level, Vec3[] vec3s, float v) {
-        this.handlePositions(level, vec3s, v);
-        return false;
+    @Inject(method = "lambda$simulateTrain$2", at = @At("HEAD"), cancellable = true)
+    public void simulateTrain(Level world, int ridingCar, float ticksElapsed, double[] prevX, double[] prevY, double[] prevZ, float[] prevYaw, float[] prevPitch, double x, double y, double z, float yaw, float pitch, double realSpacing, boolean doorLeftOpen, boolean doorRightOpen, CallbackInfo ci) {
+        ci.cancel();
     }
 
     @WrapOperation(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/Train;getRailSpeed(I)F"), remap = false)

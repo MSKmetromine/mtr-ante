@@ -527,7 +527,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
             runnable.run();
         }
 
-        return this.doorsLeft.getOrDefault(0, false);
+        return this.doorsLeft.getOrDefault(index, false);
     }
 
     @Redirect(method = "calculateCar", at = @At(value = "INVOKE", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", ordinal = 1))
@@ -543,6 +543,6 @@ public abstract class TrainMixin implements TrainExtraSupplier{
             runnable.run();
         }
 
-        return this.doorsRight.getOrDefault(0, false);
+        return this.doorsRight.getOrDefault(index, false);
     }
 }

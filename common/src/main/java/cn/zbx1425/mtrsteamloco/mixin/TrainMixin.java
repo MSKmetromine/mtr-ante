@@ -30,7 +30,8 @@ import mtr.data.*;
 
 import java.util.*;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,8 +54,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     private CustomTrainType customTrainType;
     private CarPosition[] carPositions;
 
-    private AtomicBoolean doorsLeft;
-    private AtomicBoolean doorsRight;
+    private ConcurrentMap<Integer, Boolean> doorsLeft;
+    private ConcurrentMap<Integer, Boolean> doorsRight;
 
     @Override
     public Map<String, String> getCustomConfigs() {
@@ -164,8 +165,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     private void fromDefinitions(long id, long sidingId, float railLength, String trainId, String baseTrainType, int trainCars, List<PathData> path, List<Double> distances, int repeatIndex1, int repeatIndex2, float accelerationConstant, boolean isManualAllowed, int maxManualSpeed, int manualToAutomaticTime, CallbackInfo ci) {
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
-        this.doorsLeft = new AtomicBoolean();
-        this.doorsRight = new AtomicBoolean();
+        this.doorsLeft = new ConcurrentHashMap<>();
+        this.doorsRight = new ConcurrentHashMap<>();
         this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
@@ -185,8 +186,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
-        this.doorsLeft = new AtomicBoolean();
-        this.doorsRight = new AtomicBoolean();
+        this.doorsLeft = new ConcurrentHashMap<>();
+        this.doorsRight = new ConcurrentHashMap<>();
         this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
@@ -205,8 +206,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
-        this.doorsLeft = new AtomicBoolean();
-        this.doorsRight = new AtomicBoolean();
+        this.doorsLeft = new ConcurrentHashMap<>();
+        this.doorsRight = new ConcurrentHashMap<>();
         this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
@@ -220,8 +221,8 @@ public abstract class TrainMixin implements TrainExtraSupplier{
 
         this.customTrainType = CustomTrainType.parse(this.baseTrainType);
         this.carPositions = new CarPosition[this.trainCars];
-        this.doorsLeft = new AtomicBoolean();
-        this.doorsRight = new AtomicBoolean();
+        this.doorsLeft = new ConcurrentHashMap<>();
+        this.doorsRight = new ConcurrentHashMap<>();
         this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
@@ -514,8 +515,9 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     }
 
     @Redirect(method = "calculateCar", at = @At(value = "INVOKE", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", ordinal = 0))
-    public boolean calculateCarScanDoors0(Train instance, Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks) {
-        Runnable runnable = () -> this.doorsLeft.set(
+    public boolean calculateCarScanDoors0(Train instance, Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks, Level world2, Vec3[] positions, int index) {
+        Runnable runnable = () -> this.doorsLeft.put(
+                index,
                 this.scanDoors(world, trainX, trainY, trainZ, checkYaw, pitch, halfSpacing, dwellTicks)
         );
 
@@ -525,12 +527,13 @@ public abstract class TrainMixin implements TrainExtraSupplier{
             runnable.run();
         }
 
-        return this.doorsLeft.get();
+        return this.doorsLeft.getOrDefault(0, false);
     }
 
     @Redirect(method = "calculateCar", at = @At(value = "INVOKE", target = "Lmtr/data/Train;scanDoors(Lnet/minecraft/world/level/Level;DDDFFDI)Z", ordinal = 1))
-    public boolean calculateCarScanDoors1(Train instance, Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks) {
-        Runnable runnable = () -> this.doorsRight.set(
+    public boolean calculateCarScanDoors1(Train instance, Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks, Level world2, Vec3[] positions, int index) {
+        Runnable runnable = () -> this.doorsRight.put(
+                index,
                 this.scanDoors(world, trainX, trainY, trainZ, checkYaw, pitch, halfSpacing, dwellTicks)
         );
 
@@ -540,6 +543,6 @@ public abstract class TrainMixin implements TrainExtraSupplier{
             runnable.run();
         }
 
-        return this.doorsRight.get();
+        return this.doorsRight.getOrDefault(0, false);
     }
 }

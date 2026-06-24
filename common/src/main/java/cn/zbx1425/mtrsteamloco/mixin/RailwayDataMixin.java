@@ -385,7 +385,7 @@ public class RailwayDataMixin implements IPacket {
 					driveTrainTask,
 					autoSaveTask,
 					syncDataCacheTask
-            ).get(5L, TimeUnit.SECONDS);
+            ).get(500L, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error during async simulation.", e);
 		} catch (TimeoutException e) {

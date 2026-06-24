@@ -28,6 +28,8 @@ import java.util.function.Function;
 
 @Mixin(TrainServer.class)
 public abstract class TrainServerMixin extends Train {
+    private Set<UUID> newRidingEntities;
+
     @Shadow(remap = false)
     private long routeId;
 
@@ -104,8 +106,15 @@ public abstract class TrainServerMixin extends Train {
 
     @Redirect(method = "simulateCar", at = @At(value = "INVOKE", target = "Lmtr/data/VehicleRidingServer;mountRider(Lnet/minecraft/world/level/Level;Ljava/util/Set;JJDDDDDFFZZILnet/minecraft/resources/ResourceLocation;Ljava/util/function/Function;Ljava/util/function/Consumer;)V"))
     private void simulateCarMountRider(Level world, Set<UUID> ridingEntities, long id, long routeId, double carX, double carY, double carZ, double length, double width, float carYaw, float carPitch, boolean doorOpen, boolean canMount, int percentageOffset, ResourceLocation packetId, Function<Player, Boolean> canRide, Consumer<Player> ridingCallback) {
+        if (this.newRidingEntities != null) {
+            ridingEntities.clear();
+            ridingEntities.addAll(this.newRidingEntities);
+        } else {
+            this.newRidingEntities = Collections.synchronizedSet(new HashSet<>(ridingEntities));
+        }
+
         world.getServer().execute(() -> {
-            VehicleRidingServer.mountRider(world, ridingEntities, id, routeId, carX, carY, carZ, length, width, carYaw, carPitch, doorOpen, canMount, percentageOffset, packetId, canRide, ridingCallback);
+            VehicleRidingServer.mountRider(world, this.newRidingEntities, id, routeId, carX, carY, carZ, length, width, carYaw, carPitch, doorOpen, canMount, percentageOffset, packetId, canRide, ridingCallback);
         });
     }
 }

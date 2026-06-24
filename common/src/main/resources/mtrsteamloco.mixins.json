@@ -71,7 +71,8 @@
     "SidingAccessor",
     "SidingMixin",
     "TrainMixin",
-    "TrainServerMixin"
+    "TrainServerMixin",
+    "UpdateNearbyMovingObjectsMixin"
   ],
   "server": [
   ]

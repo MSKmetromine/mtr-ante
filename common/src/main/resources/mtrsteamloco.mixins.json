@@ -57,6 +57,7 @@
     "ItemRailModifierMixin",
     "ItemWithCreativeTabBaseMixin",
     "LiftMixin",
+    "LiftServerMixin",
     "PackMixin",
     "PathDataAccessor",
     "PathFinderMixin",

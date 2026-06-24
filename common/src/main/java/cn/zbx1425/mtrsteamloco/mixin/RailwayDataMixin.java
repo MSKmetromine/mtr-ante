@@ -311,6 +311,8 @@ public class RailwayDataMixin implements IPacket {
 	}
 
     public void simulateTrains() {
+		this.mtrSteamLoco$syncDataCache();
+
 		var sendPlayersUpdatesTask = CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.SIMULATION);
 		var updateNearbyLiftsStartTask = CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.SIMULATION);
 
@@ -366,8 +368,6 @@ public class RailwayDataMixin implements IPacket {
 
 		var autoSaveTask = CompletableFuture.runAsync(railwayDataFileSaveModule::autoSaveTick, ModExecutors.SIMULATION);
 
-		var syncDataCacheTask = CompletableFuture.runAsync(this::mtrSteamLoco$syncDataCache, ModExecutors.SIMULATION);
-
         try {
             CompletableFuture.allOf(
                     sendPlayersUpdatesTask,
@@ -383,9 +383,8 @@ public class RailwayDataMixin implements IPacket {
 					routeFinderTask,
 					cooldownTask,
 					driveTrainTask,
-					autoSaveTask,
-					syncDataCacheTask
-            ).get(500L, TimeUnit.SECONDS);
+					autoSaveTask
+            ).get(5L, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error during async simulation.", e);
 		} catch (TimeoutException e) {
@@ -404,8 +403,7 @@ public class RailwayDataMixin implements IPacket {
                     "routeFinderTask = " + routeFinderTask + "; " +
                     "cooldownTask = " + cooldownTask + "; " +
                     "driveTrainTask = " + driveTrainTask + "; " +
-                    "autoSaveTask = " + autoSaveTask + "; " +
-                    "syncDataCacheTask = " + syncDataCacheTask;
+                    "autoSaveTask = " + autoSaveTask;
 
 			throw new RuntimeException("Timed out waiting for async simulation to finish. " + tasksSummary, e);
 		}

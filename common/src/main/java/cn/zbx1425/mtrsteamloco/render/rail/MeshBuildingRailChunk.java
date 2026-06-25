@@ -58,9 +58,9 @@ public class MeshBuildingRailChunk extends RailChunkBase {
         for (Map.Entry<BakedRail, ArrayList<Matrix4f>> entry : containingRails.entrySet()) {
             ArrayList<Matrix4f> railSpan = entry.getValue();
             for (Matrix4f pieceMat : railSpan) {
-                final Vector3f lightPos = pieceMat.getTranslationPart();
-                yMin = Math.min(yMin, lightPos.y());
-                yMax = Math.max(yMax, lightPos.y());
+                var lightPos = this.getChunkOrigin().add(pieceMat.getTranslationPart().toVec3());
+                yMin = Math.min(yMin, (float) lightPos.y());
+                yMax = Math.max(yMax, (float) lightPos.y());
                 final BlockPos lightBlockPos = new BlockPos(Mth.floor(lightPos.x()), Mth.floor(lightPos.y() + 0.1), Mth.floor(lightPos.z()));
                 final int light = LightTexture.pack(world.getBrightness(LightLayer.BLOCK, lightBlockPos), world.getBrightness(LightLayer.SKY, lightBlockPos));
                 combinedModel.appendTransformed(railModel, pieceMat, entry.getKey().color, light);

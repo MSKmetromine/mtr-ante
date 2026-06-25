@@ -49,6 +49,14 @@ dependencies {
 		modCompileOnly("maven.modrinth:station-decoration:${rootProject.station_decoration_version}-fabric,${minecraft_version}")
 		modRuntimeOnly("maven.modrinth:russian-metro-addon:fabric-${rootProject.russian_metro_version}")
 	}
+
+	if (rootProject.minecraft_main_version == 20) {
+		modRuntimeOnly("maven.modrinth:sodium:mc1.20.1-0.5.12-beta.2-fabric")
+		modRuntimeOnly("maven.modrinth:iris:1.7.6+1.20.1")
+		runtimeOnly("org.anarres:jcpp:1.4.11")
+		runtimeOnly("io.github.douira:glsl-transformer:2.0.1")
+		runtimeOnly("org.antlr:antlr4-runtime:4.13.1")
+	}
 }
 
 processResources {

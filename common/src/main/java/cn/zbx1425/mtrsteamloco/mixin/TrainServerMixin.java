@@ -117,4 +117,9 @@ public abstract class TrainServerMixin extends Train {
             VehicleRidingServer.mountRider(world, this.newRidingEntities, id, routeId, carX, carY, carZ, length, width, carYaw, carPitch, doorOpen, canMount, percentageOffset, packetId, canRide, ridingCallback);
         });
     }
+
+    @Redirect(method = "lambda$handlePositions$2", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    private Object handlePositionsNewHashSet(Map<Object, Object> instance, Object k, Object v) {
+        return instance.put(k, Collections.synchronizedSet((Set<?>) v));
+    }
 }

@@ -10,10 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -33,5 +30,10 @@ public abstract class LiftServerMixin {
         world.getServer().execute(() -> {
             VehicleRidingServer.mountRider(world, this.newRidingEntities, id, routeId, carX, carY, carZ, length, width, carYaw, carPitch, doorOpen, canMount, percentageOffset, packetId, canRide, ridingCallback);
         });
+    }
+
+    @Redirect(method = "lambda$tickServer$0", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
+    private Object handlePositionsNewHashSet(Map<Object, Object> instance, Object k, Object v) {
+        return instance.put(k, Collections.synchronizedSet((Set<?>) v));
     }
 }

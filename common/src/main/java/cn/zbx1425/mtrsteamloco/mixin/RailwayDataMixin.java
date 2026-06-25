@@ -359,12 +359,12 @@ public class RailwayDataMixin implements IPacket {
 			}
 		}, ModExecutors.SIMULATION);
 
-		var updateNearbyTrainsTask = deployTrainsTask.thenRunAsync(updateNearbyTrains::tick, ModExecutors.SIMULATION);
+		var driveTrainTask = deployTrainsTask.thenRunAsync(railwayDataDriveTrainModule::tick, ModExecutors.SIMULATION);
+		var updateNearbyTrainsTask = driveTrainTask.thenRunAsync(updateNearbyTrains::tick, ModExecutors.SIMULATION);
 		var updateScheduleTask = updateNearbyTrainsTask.thenRunAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.SIMULATION);
 		var routeFinderTask = updateScheduleTask.thenRunAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION);
 
 		var cooldownTask = CompletableFuture.runAsync(railwayDataCoolDownModule::tick, ModExecutors.SIMULATION);
-		var driveTrainTask = CompletableFuture.runAsync(railwayDataDriveTrainModule::tick, ModExecutors.SIMULATION);
 
 		var autoSaveTask = CompletableFuture.runAsync(railwayDataFileSaveModule::autoSaveTick, ModExecutors.SIMULATION);
 

@@ -20,17 +20,17 @@ import java.util.concurrent.ConcurrentHashMap;
 @Mixin(UpdateNearbyMovingObjects.class)
 public abstract class UpdateNearbyMovingObjectsMixin<T extends NameColorDataBase> {
     @Mutable
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public Map<Player, Set<T>> newDataSetInPlayerRange;
 
     @Mutable
-    @Shadow
+    @Shadow(remap = false)
     @Final
     public Set<T> dataSetToSync;
 
     @Mutable
-    @Shadow
+    @Shadow(remap = false)
     @Final
     private Map<Player, Set<T>> dataSetInPlayerRange;
 

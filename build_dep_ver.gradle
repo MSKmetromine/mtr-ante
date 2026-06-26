@@ -83,3 +83,5 @@ rootProject.ext.cloth_config_version = [
 rootProject.ext.station_decoration_version = "${minecraft_version}-3.2.2-1.3.4-enhancement-1"
 
 rootProject.ext.russian_metro_version = "${minecraft_version}-3.2.2-1.1.0"
+
+rootProject.ext.transitmanager_version = "1.3.0+mc${minecraft_version}"

@@ -31,7 +31,7 @@ public abstract class LiftMixin {
     protected boolean backCanOpen;
 
     @Mutable
-    @Shadow
+    @Shadow(remap = false)
     @Final
     protected Set<UUID> ridingEntities;
 
@@ -40,7 +40,7 @@ public abstract class LiftMixin {
         this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }
 
-    @Inject(method = "<init>(Ljava/util/Map;)V", at = @At("TAIL"))
+    @Inject(method = "<init>(Ljava/util/Map;)V", at = @At("TAIL"), remap = false)
     private void init(Map map, CallbackInfo ci) {
         this.ridingEntities = Collections.synchronizedSet(this.ridingEntities);
     }

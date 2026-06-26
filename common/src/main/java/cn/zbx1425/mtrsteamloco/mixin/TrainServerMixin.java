@@ -2,10 +2,7 @@ package cn.zbx1425.mtrsteamloco.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import mtr.block.*;
-import mtr.data.RailwayData;
-import mtr.data.Train;
-import mtr.data.TrainServer;
-import mtr.data.VehicleRidingServer;
+import mtr.data.*;
 import mtr.path.PathData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -19,8 +16,11 @@ import net.minecraft.world.level.block.entity.HopperBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -28,7 +28,8 @@ import java.util.function.Function;
 
 @Mixin(TrainServer.class)
 public abstract class TrainServerMixin extends Train {
-    private Set<UUID> newRidingEntities;
+    @Unique
+    private int mtrSteamLoco$oldPassengerCount;
 
     @Shadow(remap = false)
     private long routeId;
@@ -45,7 +46,7 @@ public abstract class TrainServerMixin extends Train {
     @Shadow
     protected abstract void checkBlock(BlockPos pos, Consumer<BlockPos> callback);
 
-    @Shadow
+    @Shadow(remap = false)
     private int manualCoolDown;
 
     @Redirect(method = "simulateTrain", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
@@ -106,20 +107,23 @@ public abstract class TrainServerMixin extends Train {
 
     @Redirect(method = "simulateCar", at = @At(value = "INVOKE", target = "Lmtr/data/VehicleRidingServer;mountRider(Lnet/minecraft/world/level/Level;Ljava/util/Set;JJDDDDDFFZZILnet/minecraft/resources/ResourceLocation;Ljava/util/function/Function;Ljava/util/function/Consumer;)V"))
     private void simulateCarMountRider(Level world, Set<UUID> ridingEntities, long id, long routeId, double carX, double carY, double carZ, double length, double width, float carYaw, float carPitch, boolean doorOpen, boolean canMount, int percentageOffset, ResourceLocation packetId, Function<Player, Boolean> canRide, Consumer<Player> ridingCallback) {
-        if (this.newRidingEntities != null) {
-            ridingEntities.clear();
-            ridingEntities.addAll(this.newRidingEntities);
-        } else {
-            this.newRidingEntities = Collections.synchronizedSet(new HashSet<>(ridingEntities));
-        }
-
         world.getServer().execute(() -> {
-            VehicleRidingServer.mountRider(world, this.newRidingEntities, id, routeId, carX, carY, carZ, length, width, carYaw, carPitch, doorOpen, canMount, percentageOffset, packetId, canRide, ridingCallback);
+            VehicleRidingServer.mountRider(world, ridingEntities, id, routeId, carX, carY, carZ, length, width, carYaw, carPitch, doorOpen, canMount, percentageOffset, packetId, canRide, ridingCallback);
         });
     }
 
     @Redirect(method = "lambda$handlePositions$2", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private Object handlePositionsNewHashSet(Map<Object, Object> instance, Object k, Object v) {
         return instance.put(k, Collections.synchronizedSet((Set<?>) v));
+    }
+
+    @Redirect(method = "simulateTrain", at = @At(value = "INVOKE", target = "Ljava/util/Set;size()I", ordinal = 0))
+    private int getOldPassengerCount(Set instance) {
+       return this.mtrSteamLoco$oldPassengerCount;
+    }
+
+    @Inject(method = "simulateTrain", at = @At("RETURN"))
+    private void simulateTrainEnd(Level world, float ticksElapsed, Depot depot, DataCache dataCache, List<Map<UUID, Long>> trainPositions, Map<Player, Set<TrainServer>> trainsInPlayerRange, Map<Long, List<ScheduleEntry>> schedulesForPlatform, Map<Long, Map<BlockPos, TrainDelay>> trainDelays, CallbackInfoReturnable<Boolean> cir) {
+        this.mtrSteamLoco$oldPassengerCount = this.ridingEntities.size();
     }
 }

@@ -148,7 +148,7 @@ public abstract class TrainMixin implements TrainExtraSupplier{
     protected abstract boolean scanDoors(Level world, double trainX, double trainY, double trainZ, float checkYaw, float pitch, double halfSpacing, int dwellTicks);
 
     @Mutable
-    @Shadow
+    @Shadow(remap = false)
     @Final
     protected Set<UUID> ridingEntities;
 

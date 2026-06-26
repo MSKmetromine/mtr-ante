@@ -66,6 +66,7 @@
     "RailMixin",
     "RailTypeMixin",
     "RailwayDataAccessor",
+    "RailwayDataCooldownModuleMixin",
     "RailwayDataMixin",
     "RailwayDataRailActionsModuleMixin",
     "RouteMixin",

@@ -1,6 +1,7 @@
 package cn.zbx1425.mtrsteamloco.mixin;
 
 import cn.zbx1425.mtrsteamloco.util.ModExecutors;
+import cn.zbx1425.sowcerext.util.Logging;
 import net.minecraft.world.phys.Vec3;
 import mtr.data.*;
 import cn.zbx1425.mtrsteamloco.data.*;
@@ -384,7 +385,7 @@ public class RailwayDataMixin implements IPacket {
 					cooldownTask,
 					driveTrainTask,
 					autoSaveTask
-            ).get(5L, TimeUnit.SECONDS);
+            ).get(10L, TimeUnit.SECONDS);
         } catch (InterruptedException | ExecutionException e) {
 			throw new RuntimeException("Error during async simulation.", e);
 		} catch (TimeoutException e) {
@@ -405,7 +406,7 @@ public class RailwayDataMixin implements IPacket {
                     "driveTrainTask = " + driveTrainTask + "; " +
                     "autoSaveTask = " + autoSaveTask;
 
-			throw new RuntimeException("Timed out waiting for async simulation to finish. " + tasksSummary, e);
+            Logging.LOGGER.error("Timed out waiting for async simulation to finish. {}", tasksSummary, e);
 		}
 
 		railwayDataRailActionsModule.tick();

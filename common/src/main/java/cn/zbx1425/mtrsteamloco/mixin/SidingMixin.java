@@ -6,6 +6,8 @@ import com.llamalad7.mixinextras.sugar.Local;
 import io.netty.buffer.Unpooled;
 import mtr.data.RailwayDataDriveTrainModule;
 import mtr.packet.IPacket;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.server.IntegratedServer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
@@ -20,16 +22,22 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import net.minecraft.world.level.Level;
 import org.msgpack.core.MessagePacker;
 import org.msgpack.value.Value;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Siding.class)
 public abstract class SidingMixin extends SavedRailBase implements IPacket, IReducedSaveData, SidingExtraSupplier {
+    @Shadow
+    private Level world;
+
     private SidingMixin(long id, TransportMode transportMode, BlockPos pos1, BlockPos pos2) {
         super(id, transportMode, pos1, pos2);
     }
@@ -46,6 +54,12 @@ public abstract class SidingMixin extends SavedRailBase implements IPacket, IRed
     @Unique
     private float decelerationConstant;
 
+    @Unique
+    private long lastSimulationTime;
+
+    @Unique
+    private float tickDelta;
+
     // @Inject(method = "simulateTrain", at = @At("TAIL"), remap = false)
     private void __onSimulateTrain(DataCache dataCache, RailwayDataDriveTrainModule railwayDataDriveTrainModule, List<Map<UUID, Long>> trainPositions, SignalBlocks signalBlocks, Map<Player, Set<TrainServer>> trainsInPlayerRange, Set<TrainServer> trainsToSync, Map<Long, List<ScheduleEntry>> schedulesForPlatform, Map<Long, Map<BlockPos, TrainDelay>> trainDelays, CallbackInfo ci) {
         for (TrainServer train : trainsToSync) {
@@ -53,6 +67,17 @@ public abstract class SidingMixin extends SavedRailBase implements IPacket, IRed
             trainsToSync.add(train);
             ((TrainExtraSupplier) train).isConfigsChanged(false);
         }
+    }
+
+    @Inject(method = "simulateTrain", at = @At("TAIL"), remap = false)
+    private void simulateTrain(DataCache dataCache, RailwayDataDriveTrainModule railwayDataDriveTrainModule, List<Map<UUID, Long>> trainPositions, SignalBlocks signalBlocks, Map<Player, Set<TrainServer>> trainsInPlayerRange, Set<TrainServer> trainsToSync, Map<Long, List<ScheduleEntry>> schedulesForPlatform, Map<Long, Map<BlockPos, TrainDelay>> trainDelays, CallbackInfo ci) {
+        this.tickDelta = this.lastSimulationTime > 0 ? (float) (System.currentTimeMillis() - this.lastSimulationTime) / 50F : 0F;
+        this.lastSimulationTime = System.currentTimeMillis();
+    }
+
+    @ModifyArg(method = "simulateTrain", at = @At(value = "INVOKE", target = "Lmtr/data/TrainServer;simulateTrain(Lnet/minecraft/world/level/Level;FLmtr/data/Depot;Lmtr/data/DataCache;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/util/Map;)Z"), index = 1)
+    private float simulateTrainTicksElapsed(float ticksElapsed) {
+        return this.world.getServer().isDedicatedServer() ? this.tickDelta : ticksElapsed;
     }
 
     @Inject(method = "<init>(JLmtr/data/TransportMode;Lnet/minecraft/core/BlockPos;Lnet/minecraft/core/BlockPos;F)V", at = @At("TAIL"))

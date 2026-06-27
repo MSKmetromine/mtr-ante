@@ -209,6 +209,10 @@ public class RailwayDataMixin implements IPacket {
 
 	@Unique
 	private void mtrSteamLoco$tickSidings() {
+		for (var player : this.world.players()) {
+			this.updateNearbyTrains.newDataSetInPlayerRange.put(player, Collections.synchronizedSet(new HashSet<>()));
+		}
+
 		schedulesForPlatform.clear();
 
 		trainPositions.remove(0);
@@ -318,6 +322,10 @@ public class RailwayDataMixin implements IPacket {
 		var updateNearbyLiftsStartTask = CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.SIMULATION);
 
 		var tickLiftsTask = updateNearbyLiftsStartTask.thenRunAsync(() -> {
+			for (var player : this.world.players()) {
+				this.updateNearbyLifts.newDataSetInPlayerRange.put(player, Collections.synchronizedSet(new HashSet<>()));
+			}
+
 			var liftTasks = new CompletableFuture[lifts.size()];
 			var iterator = lifts.iterator();
 

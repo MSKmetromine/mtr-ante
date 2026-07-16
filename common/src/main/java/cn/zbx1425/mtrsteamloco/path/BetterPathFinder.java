@@ -89,6 +89,8 @@ public class BetterPathFinder {
             }
         };
 
+        var visited = new HashSet<BlockPos>();
+
         for (int i = 0; i < 2; i++) {
             // pl("Starting iteration " + i + " of path finding loop");
             final List<PathPart> path = new ArrayList<>();
@@ -102,13 +104,14 @@ public class BetterPathFinder {
                 // pl("While loop with path size " + path.size());
                 final PathPart lastPathPart = path.get(path.size() - 1);
 
-                if (path.size() >= 100) {
+                if (visited.contains(lastPathPart.pos)) {
                     path.remove(lastPathPart);
                     continue;
                 }
 
                 if (lastPathPart.otherOptions.isEmpty()) {
                     // pl("Removing lastPathPart as otherOptions is empty");
+                    visited.add(lastPathPart.pos);
                     path.remove(lastPathPart);
                 } else {
                     // pl("Processing otherOptions for lastPathPart");

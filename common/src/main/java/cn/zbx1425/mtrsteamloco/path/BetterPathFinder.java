@@ -89,7 +89,7 @@ public class BetterPathFinder {
             }
         };
 
-        var visited = new HashSet<BlockPos>();
+        var visited = new HashSet<VisitedSegment>();
 
         for (int i = 0; i < 2; i++) {
             // pl("Starting iteration " + i + " of path finding loop");
@@ -103,15 +103,16 @@ public class BetterPathFinder {
             while (path.size() >= 2) {
                 // pl("While loop with path size " + path.size());
                 final PathPart lastPathPart = path.get(path.size() - 1);
+                final var segment = new VisitedSegment(path.get(path.size() - 2).pos, lastPathPart.pos);
 
-                if (visited.contains(lastPathPart.pos)) {
+                if (visited.contains(segment)) {
                     path.remove(lastPathPart);
                     continue;
                 }
 
                 if (lastPathPart.otherOptions.isEmpty()) {
                     // pl("Removing lastPathPart as otherOptions is empty");
-                    visited.add(lastPathPart.pos);
+                    visited.add(segment);
                     path.remove(lastPathPart);
                 } else {
                     // pl("Processing otherOptions for lastPathPart");
@@ -305,6 +306,28 @@ public class BetterPathFinder {
 
         private boolean isSame(BlockPos newPos, RailAngle newDirection) {
             return newPos.equals(pos) && _equals(direction, newDirection);
+        }
+    }
+
+    private static class VisitedSegment {
+        private final BlockPos from;
+        private final BlockPos to;
+
+        public VisitedSegment(BlockPos from, BlockPos to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            VisitedSegment that = (VisitedSegment) o;
+            return Objects.equals(from, that.from) && Objects.equals(to, that.to);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(from, to);
         }
     }
 }

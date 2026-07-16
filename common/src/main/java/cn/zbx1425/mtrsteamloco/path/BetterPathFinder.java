@@ -5,11 +5,15 @@ import mtr.data.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.function.Function;
 
 public class BetterPathFinder {
-
     private static final int MAX_AIRPLANE_TURN_ARC = 128;
 
     public static int findPath(List<PathData> path, Map<BlockPos, Map<BlockPos, Rail>> rails, List<SavedRailBase> savedRailBases, int stopIndexOffset, int cruisingAltitude, boolean useFastSpeed) {
@@ -97,6 +101,11 @@ public class BetterPathFinder {
             while (path.size() >= 2) {
                 // pl("While loop with path size " + path.size());
                 final PathPart lastPathPart = path.get(path.size() - 1);
+
+                if (path.size() >= 100) {
+                    path.remove(lastPathPart);
+                    continue;
+                }
 
                 if (lastPathPart.otherOptions.isEmpty()) {
                     // pl("Removing lastPathPart as otherOptions is empty");
@@ -271,12 +280,12 @@ public class BetterPathFinder {
 
     private static boolean _equals(RailAngle a, RailAngle b) {
         if (a == null || b == null) return false;
-        
+
         // 处理角度周期性并计算最小差值
         double normalizedA = (a.angleRadians % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
         double normalizedB = (b.angleRadians % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
         double diff = Math.abs(normalizedA - normalizedB);
-        
+
         return Math.min(diff, 2 * Math.PI - diff) < ANGLE_EQUALITY_THRESHOLD;
     }
 

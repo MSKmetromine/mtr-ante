@@ -27,7 +27,7 @@ public class RawMesh {
 
     public final MaterialProp materialProp;
     public List<Vertex> vertices = new ArrayList<>();
-    public List<Face> faces = new ArrayList<>();
+    public List<Face> faces = Collections.synchronizedList(new ArrayList<>());
 
     public RawMesh(MaterialProp materialProp) {
         this.materialProp = materialProp;

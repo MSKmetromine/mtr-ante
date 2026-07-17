@@ -81,8 +81,13 @@ public class BetterPathFinder {
             } else {
                 final Rail connection1 = newConnections.get(pos1);
                 final Rail connection2 = newConnections.get(pos2);
-                if (connection1 == null || connection2 == null || connection1.railType.speedLimit == connection2.railType.speedLimit) {
-                    return pos1.distSqr(savedRailBaseEndMidPos) > pos2.distSqr(savedRailBaseEndMidPos) ? 1 : -1;
+                if (connection1 != null && connection2 != null && connection1.railType.speedLimit == connection2.railType.speedLimit) {
+                    return (int) (
+                            connection1.getPosition(0.5).distanceToSqr(savedRailBaseEndMidPos.getCenter()) -
+                                    connection2.getPosition(0.5).distanceToSqr(savedRailBaseEndMidPos.getCenter())
+                    );
+                } else if (connection1 == null || connection2 == null) {
+                    return (int) (pos1.distSqr(savedRailBaseEndMidPos) - pos2.distSqr(savedRailBaseEndMidPos));
                 } else {
                     return connection2.railType.speedLimit - connection1.railType.speedLimit;
                 }

@@ -1,5 +1,6 @@
 package cn.zbx1425.mtrsteamloco.path;
 
+import cn.zbx1425.sowcer.math.Vector3d;
 import mtr.path.PathData;
 import mtr.data.*;
 import net.minecraft.core.BlockPos;
@@ -82,10 +83,10 @@ public class BetterPathFinder {
                 final Rail connection1 = newConnections.get(pos1);
                 final Rail connection2 = newConnections.get(pos2);
                 if (connection1 != null && connection2 != null && connection1.railType.speedLimit == connection2.railType.speedLimit) {
-                    return (int) (
-                            connection1.getPosition(0.5).distanceToSqr(savedRailBaseEndMidPos.getCenter()) -
-                                    connection2.getPosition(0.5).distanceToSqr(savedRailBaseEndMidPos.getCenter())
-                    );
+                    var mid1 = new Vector3d(connection1.getPosition(0.5)).toBlockPos();
+                    var mid2 = new Vector3d(connection2.getPosition(0.5)).toBlockPos();
+
+                    return (int) (mid1.distSqr(savedRailBaseEndMidPos) - mid2.distSqr(savedRailBaseEndMidPos));
                 } else if (connection1 == null || connection2 == null) {
                     return (int) (pos1.distSqr(savedRailBaseEndMidPos) - pos2.distSqr(savedRailBaseEndMidPos));
                 } else {

@@ -86,9 +86,9 @@ public class BetterPathFinder {
                     var mid1 = new Vector3d(connection1.getPosition(0.5)).toBlockPos();
                     var mid2 = new Vector3d(connection2.getPosition(0.5)).toBlockPos();
 
-                    return (int) (mid1.distSqr(savedRailBaseEndMidPos) - mid2.distSqr(savedRailBaseEndMidPos));
+                    return (int) (mid2.distSqr(savedRailBaseEndMidPos) - mid1.distSqr(savedRailBaseEndMidPos));
                 } else if (connection1 == null || connection2 == null) {
-                    return (int) (pos1.distSqr(savedRailBaseEndMidPos) - pos2.distSqr(savedRailBaseEndMidPos));
+                    return (int) (pos2.distSqr(savedRailBaseEndMidPos) - pos1.distSqr(savedRailBaseEndMidPos));
                 } else {
                     return connection2.railType.speedLimit - connection1.railType.speedLimit;
                 }

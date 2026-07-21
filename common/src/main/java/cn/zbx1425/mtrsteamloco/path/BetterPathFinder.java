@@ -74,6 +74,8 @@ public class BetterPathFinder {
     }
 
     private static List<PathData> findPath(Map<BlockPos, Map<BlockPos, Rail>> rails, Set<BlockPos> runways, SavedRailBase savedRailBaseStart, SavedRailBase savedRailBaseEnd, int stopIndex, int cruisingAltitude, boolean useFastSpeed) {
+        List<List<PathData>> options = new ArrayList<>();
+
         // pl("Entering findPath (private)");
         final BlockPos savedRailBaseEndMidPos = savedRailBaseEnd.getMidPos();
         final Function<Map<BlockPos, Rail>, Comparator<BlockPos>> comparator = newConnections -> (pos1, pos2) -> {
@@ -140,7 +142,7 @@ public class BetterPathFinder {
                                 // pl("Rail is null, checking runways");
                                 if (runways.isEmpty()) {
                                     // pl("Runways is empty, returning empty list");
-                                    return new ArrayList<>();
+//                                    return new ArrayList<>();
                                 } else {
                                     // pl("Adding airplane dummy path");
                                     final int heightDifference1 = cruisingAltitude - pos1.getY();
@@ -174,19 +176,23 @@ public class BetterPathFinder {
                         final Rail rail = DataCache.tryGet(rails, newPos, endPos);
                         if (rail == null) {
                             // pl("End rail is null, returning empty list");
-                            return new ArrayList<>();
+//                            return new ArrayList<>();
                         } else {
                             // pl("Adding end rail with dwell time: " + savedRailBaseEnd.getDwellTime());
                             railPath.add(new PathData(rail, savedRailBaseEnd.id, savedRailBaseEnd instanceof Platform ? savedRailBaseEnd.getDwellTime() : 0, newPos, endPos, stopIndex + 1));
-                            return railPath;
+                            options.add(railPath);
                         }
                     }
                 }
             }
         }
 
+        if (options.size() > 1) {
+            System.out.println("Options count: " + options.size());
+        }
+
         // pl("No path found, returning empty list");
-        return new ArrayList<>();
+        return options.stream().min(Comparator.comparingInt(List::size)).orElseGet(ArrayList::new);
     }
 
     private static BlockPos addAirplanePath(RailAngle startAngle, BlockPos startPos, RailAngle expectedAngle, int turnArc, List<PathData> tempRailPath, RailType railType, int stopIndex, boolean reverse) {

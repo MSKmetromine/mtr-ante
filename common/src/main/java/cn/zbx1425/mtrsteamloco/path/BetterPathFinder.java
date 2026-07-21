@@ -84,13 +84,9 @@ public class BetterPathFinder {
             } else {
                 final Rail connection1 = newConnections.get(pos1);
                 final Rail connection2 = newConnections.get(pos2);
-                if (connection1 != null && connection2 != null && connection1.railType.speedLimit == connection2.railType.speedLimit) {
-                    var mid1 = new Vector3d(connection1.getPosition(0.5)).toBlockPos();
-                    var mid2 = new Vector3d(connection2.getPosition(0.5)).toBlockPos();
 
-                    return (int) (mid2.distSqr(savedRailBaseEndMidPos) - mid1.distSqr(savedRailBaseEndMidPos));
-                } else if (connection1 == null || connection2 == null) {
-                    return (int) (pos2.distSqr(savedRailBaseEndMidPos) - pos1.distSqr(savedRailBaseEndMidPos));
+                if (connection1 == null || connection2 == null || connection1.railType.speedLimit == connection2.railType.speedLimit) {
+                    return pos1.distSqr(savedRailBaseEndMidPos) > pos2.distSqr(savedRailBaseEndMidPos) ? 1 : -1;
                 } else {
                     return connection2.railType.speedLimit - connection1.railType.speedLimit;
                 }
@@ -181,14 +177,11 @@ public class BetterPathFinder {
                             // pl("Adding end rail with dwell time: " + savedRailBaseEnd.getDwellTime());
                             railPath.add(new PathData(rail, savedRailBaseEnd.id, savedRailBaseEnd instanceof Platform ? savedRailBaseEnd.getDwellTime() : 0, newPos, endPos, stopIndex + 1));
                             options.add(railPath);
+                            visited.clear();
                         }
                     }
                 }
             }
-        }
-
-        if (options.size() > 1) {
-            System.out.println("Options count: " + options.size());
         }
 
         // pl("No path found, returning empty list");
@@ -232,7 +225,7 @@ public class BetterPathFinder {
 
     private static void addPathPart(Map<BlockPos, Map<BlockPos, Rail>> rails, Set<BlockPos> runways,
                                    BlockPos newPos, BlockPos lastPos, List<PathPart> path,
-                                   Set<BlockPos> turnBacks, Function<Map<BlockPos, Rail>, 
+                                   Set<BlockPos> turnBacks, Function<Map<BlockPos, Rail>,
                                    Comparator<BlockPos>> comparator) {
         final Map<BlockPos, Rail> newConnections = rails.get(newPos);
         final Rail oldRail = rails.get(lastPos).get(newPos);
@@ -247,7 +240,7 @@ public class BetterPathFinder {
 
         if (newConnections != null) {
             final boolean canTurnBack = checkTurnBackCondition(oldRail, turnBacks, newPos);
-            
+
             newConnections.forEach((connectedPos, rail) -> {
                 if (isValidConnection(rail, newDirection, path, newPos, canTurnBack)) {
                     otherOptions.add(connectedPos);
@@ -266,24 +259,24 @@ public class BetterPathFinder {
     }
 
     private static RailAngle calculateNewDirection(Rail oldRail, Map<BlockPos, Rail> newConnections) {
-        return oldRail == null ? 
+        return oldRail == null ?
             newConnections.values().stream()
                 .map(rail -> rail.facingStart)
                 .findFirst()
-                .orElse(RailAngle.E) : 
+                .orElse(RailAngle.E) :
             oldRail.facingEnd.getOpposite();
     }
 
     private static boolean checkTurnBackCondition(Rail oldRail, Set<BlockPos> turnBacks, BlockPos newPos) {
-        return oldRail != null && 
-               oldRail.railType == RailType.TURN_BACK && 
+        return oldRail != null &&
+               oldRail.railType == RailType.TURN_BACK &&
                !turnBacks.contains(newPos);
     }
 
-    private static boolean isValidConnection(Rail rail, RailAngle newDirection, 
+    private static boolean isValidConnection(Rail rail, RailAngle newDirection,
                                             List<PathPart> path, BlockPos newPos,
                                             boolean canTurnBack) {
-        return rail.railType != RailType.NONE && 
+        return rail.railType != RailType.NONE &&
                (canTurnBack || !_equals(rail.facingStart, newDirection.getOpposite())) &&
                path.stream().noneMatch(p -> p.isSame(newPos, newDirection));
     }

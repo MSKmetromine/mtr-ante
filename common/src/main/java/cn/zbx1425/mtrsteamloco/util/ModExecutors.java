@@ -6,5 +6,5 @@ import java.util.concurrent.Executors;
 public class ModExecutors {
     private ModExecutors() {}
 
-    public static final ExecutorService SIMULATION = Executors.newWorkStealingPool();
+    public static final ExecutorService POOL = Executors.newWorkStealingPool();
 }

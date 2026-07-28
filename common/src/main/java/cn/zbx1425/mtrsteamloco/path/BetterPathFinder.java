@@ -1,17 +1,14 @@
 package cn.zbx1425.mtrsteamloco.path;
 
-import cn.zbx1425.sowcer.math.Vector3d;
+import cn.zbx1425.mtrsteamloco.util.ModExecutors;
 import mtr.path.PathData;
 import mtr.data.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 
 public class BetterPathFinder {
@@ -24,6 +21,8 @@ public class BetterPathFinder {
             // pl("savedRailBases.size() < 2, returning 0");
             return 0;
         }
+
+        var tasks = (CompletableFuture<List<PathData>>[]) new CompletableFuture[savedRailBases.size() - 1];
 
         for (int i = 0; i < savedRailBases.size() - 1; i++) {
             // pl("Processing saved rail base pair " + i);
@@ -40,14 +39,24 @@ public class BetterPathFinder {
                 });
             }
 
-            final List<PathData> partialPath = findPath(rails, runways, savedRailBaseStart, savedRailBaseEnd, i + stopIndexOffset, cruisingAltitude, useFastSpeed);
-            if (partialPath.isEmpty()) {
-                // pl("Partial path is empty, clearing path and returning " + (i + 1));
-                path.clear();
-                return i + 1;
-            }
+            final int currentI = i;
+            tasks[i] = CompletableFuture.supplyAsync(() -> findPath(rails, runways, savedRailBaseStart, savedRailBaseEnd, currentI + stopIndexOffset, cruisingAltitude, useFastSpeed), ModExecutors.POOL);
+        }
 
-            appendPath(path, partialPath);
+        try {
+            for (var i = 0; i < savedRailBases.size() - 1; i++) {
+                List<PathData> partialPath = tasks[i].get();
+
+                if (partialPath.isEmpty()) {
+                    // pl("Partial path is empty, clearing path and returning " + (i + 1));
+                    path.clear();
+                    return i + 1;
+                }
+
+                appendPath(path, partialPath);
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
         }
 
         // pl("Successfully processed all saved rail bases, returning " + savedRailBases.size());
@@ -93,7 +102,7 @@ public class BetterPathFinder {
             }
         };
 
-        var visited = new HashSet<VisitedSegment>();
+        var visited = new HashMap<VisitedSegment, Integer>();
 
         for (int i = 0; i < 2; i++) {
             // pl("Starting iteration " + i + " of path finding loop");
@@ -109,14 +118,14 @@ public class BetterPathFinder {
                 final PathPart lastPathPart = path.get(path.size() - 1);
                 final var segment = new VisitedSegment(path.get(path.size() - 2).pos, lastPathPart.pos);
 
-                if (visited.contains(segment)) {
+                if (visited.getOrDefault(segment, Integer.MAX_VALUE) <= path.size()) {
                     path.remove(lastPathPart);
                     continue;
                 }
 
                 if (lastPathPart.otherOptions.isEmpty()) {
                     // pl("Removing lastPathPart as otherOptions is empty");
-                    visited.add(segment);
+                    visited.put(segment, path.size());
                     path.remove(lastPathPart);
                 } else {
                     // pl("Processing otherOptions for lastPathPart");
@@ -177,7 +186,6 @@ public class BetterPathFinder {
                             // pl("Adding end rail with dwell time: " + savedRailBaseEnd.getDwellTime());
                             railPath.add(new PathData(rail, savedRailBaseEnd.id, savedRailBaseEnd instanceof Platform ? savedRailBaseEnd.getDwellTime() : 0, newPos, endPos, stopIndex + 1));
                             options.add(railPath);
-                            visited.clear();
                         }
                     }
                 }
@@ -185,7 +193,11 @@ public class BetterPathFinder {
         }
 
         // pl("No path found, returning empty list");
-        return options.stream().min(Comparator.comparingInt(List::size)).orElseGet(ArrayList::new);
+        return options.stream()
+                .min(Comparator.comparingDouble(path ->
+                    path.stream().reduce(0.0, (acc, data) -> acc + (data.rail.getLength() / data.rail.railType.maxBlocksPerTick), Double::sum)
+                ))
+                .orElseGet(ArrayList::new);
     }
 
     private static BlockPos addAirplanePath(RailAngle startAngle, BlockPos startPos, RailAngle expectedAngle, int turnArc, List<PathData> tempRailPath, RailType railType, int stopIndex, boolean reverse) {

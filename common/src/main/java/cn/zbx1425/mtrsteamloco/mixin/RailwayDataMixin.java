@@ -107,7 +107,7 @@ public class RailwayDataMixin implements IPacket {
 
 		for (var player : world.players()) {
 			tasks.add(
-					CompletableFuture.runAsync(() -> this.mtrSteamLoco$sendPlayerUpdates(player), ModExecutors.SIMULATION)
+					CompletableFuture.runAsync(() -> this.mtrSteamLoco$sendPlayerUpdates(player), ModExecutors.POOL)
 			);
 		}
 
@@ -227,7 +227,7 @@ public class RailwayDataMixin implements IPacket {
 			tasks[i] = CompletableFuture.runAsync(() -> {
 				siding.setSidingData(world, dataCache.sidingIdToDepot.get(siding.id), rails);
 				siding.simulateTrain(dataCache, railwayDataDriveTrainModule, trainPositions, signalBlocks, updateNearbyTrains.newDataSetInPlayerRange, updateNearbyTrains.dataSetToSync, schedulesForPlatform, trainDelays);
-			}, ModExecutors.SIMULATION);
+			}, ModExecutors.POOL);
 		}
 
         try {
@@ -318,8 +318,8 @@ public class RailwayDataMixin implements IPacket {
     public void simulateTrains() {
 		this.mtrSteamLoco$syncDataCache();
 
-		var sendPlayersUpdatesTask = CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.SIMULATION);
-		var updateNearbyLiftsStartTask = CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.SIMULATION);
+		var sendPlayersUpdatesTask = CompletableFuture.runAsync(this::mtrSteamLoco$sendPlayersUpdates, ModExecutors.POOL);
+		var updateNearbyLiftsStartTask = CompletableFuture.runAsync(updateNearbyLifts::startTick, ModExecutors.POOL);
 
 		var tickLiftsTask = updateNearbyLiftsStartTask.thenRunAsync(() -> {
 			for (var player : this.world.players()) {
@@ -334,7 +334,7 @@ public class RailwayDataMixin implements IPacket {
 
 				liftTasks[i] = CompletableFuture.runAsync(() -> {
 					lift.tickServer(world, updateNearbyLifts.newDataSetInPlayerRange, updateNearbyLifts.dataSetToSync);
-				}, ModExecutors.SIMULATION);
+				}, ModExecutors.POOL);
 			}
 
 			try {
@@ -342,12 +342,12 @@ public class RailwayDataMixin implements IPacket {
 			} catch (InterruptedException | ExecutionException e) {
 				throw new RuntimeException(e);
 			}
-		}, ModExecutors.SIMULATION);
+		}, ModExecutors.POOL);
 
-		var updateNearbyLiftsTask = tickLiftsTask.thenRunAsync(updateNearbyLifts::tick, ModExecutors.SIMULATION);
-		var resetOccupiedTask = CompletableFuture.runAsync(signalBlocks::resetOccupied, ModExecutors.SIMULATION);
-		var updateNearbyTrainsStartTask = CompletableFuture.runAsync(updateNearbyTrains::startTick, ModExecutors.SIMULATION);
-		var tickSidingsTask = updateNearbyTrainsStartTask.thenRunAsync(this::mtrSteamLoco$tickSidings, ModExecutors.SIMULATION);
+		var updateNearbyLiftsTask = tickLiftsTask.thenRunAsync(updateNearbyLifts::tick, ModExecutors.POOL);
+		var resetOccupiedTask = CompletableFuture.runAsync(signalBlocks::resetOccupied, ModExecutors.POOL);
+		var updateNearbyTrainsStartTask = CompletableFuture.runAsync(updateNearbyTrains::startTick, ModExecutors.POOL);
+		var tickSidingsTask = updateNearbyTrainsStartTask.thenRunAsync(this::mtrSteamLoco$tickSidings, ModExecutors.POOL);
 
 		var deployTrainsTask = tickSidingsTask.thenRunAsync(() -> {
 			var depotTasks = new CompletableFuture[depots.size()];
@@ -358,7 +358,7 @@ public class RailwayDataMixin implements IPacket {
 
 				depotTasks[i] = CompletableFuture.runAsync(() -> {
 					depot.deployTrain((RailwayData) (Object) this, world);
-				}, ModExecutors.SIMULATION);
+				}, ModExecutors.POOL);
 			}
 
 			try {
@@ -366,16 +366,16 @@ public class RailwayDataMixin implements IPacket {
 			} catch (InterruptedException | ExecutionException e) {
 				throw new RuntimeException(e);
 			}
-		}, ModExecutors.SIMULATION);
+		}, ModExecutors.POOL);
 
-		var driveTrainTask = deployTrainsTask.thenRunAsync(railwayDataDriveTrainModule::tick, ModExecutors.SIMULATION);
-		var updateNearbyTrainsTask = driveTrainTask.thenRunAsync(updateNearbyTrains::tick, ModExecutors.SIMULATION);
-		var updateScheduleTask = updateNearbyTrainsTask.thenRunAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.SIMULATION);
-		var routeFinderTask = updateScheduleTask.thenRunAsync(railwayDataRouteFinderModule::tick, ModExecutors.SIMULATION);
+		var driveTrainTask = deployTrainsTask.thenRunAsync(railwayDataDriveTrainModule::tick, ModExecutors.POOL);
+		var updateNearbyTrainsTask = driveTrainTask.thenRunAsync(updateNearbyTrains::tick, ModExecutors.POOL);
+		var updateScheduleTask = updateNearbyTrainsTask.thenRunAsync(this::mtrSteamLoco$updateSchedule, ModExecutors.POOL);
+		var routeFinderTask = updateScheduleTask.thenRunAsync(railwayDataRouteFinderModule::tick, ModExecutors.POOL);
 
-		var cooldownTask = CompletableFuture.runAsync(railwayDataCoolDownModule::tick, ModExecutors.SIMULATION);
+		var cooldownTask = CompletableFuture.runAsync(railwayDataCoolDownModule::tick, ModExecutors.POOL);
 
-		var autoSaveTask = CompletableFuture.runAsync(railwayDataFileSaveModule::autoSaveTick, ModExecutors.SIMULATION);
+		var autoSaveTask = CompletableFuture.runAsync(railwayDataFileSaveModule::autoSaveTick, ModExecutors.POOL);
 
         try {
             CompletableFuture.allOf(

@@ -62,7 +62,7 @@ public abstract class ScriptHolderBase {
     private static class LoadData {
         private final String name;
         private final String contextTypeName;
-        private final ResourceManager resourceManager;
+        private ResourceManager resourceManager;
         private final Map<ResourceLocation, String> scripts;
         private final JsonObject config;
         private final String key;
@@ -78,34 +78,6 @@ public abstract class ScriptHolderBase {
             this.config = config;
             this.key = key;
             this.functionNames = functionNames;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getContextTypeName() {
-            return contextTypeName;
-        }
-
-        public ResourceManager getResourceManager() {
-            return resourceManager;
-        }
-
-        public Map<ResourceLocation, String> getScripts() {
-            return scripts;
-        }
-
-        public JsonObject getConfig() {
-            return config;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public String[] getFunctionNames() {
-            return functionNames;
         }
     }
 
@@ -399,7 +371,9 @@ public abstract class ScriptHolderBase {
 
     public void reload(ResourceManager resourceManager) throws Exception {
         close();
-        load(name, contextTypeName, resourceManager, scripts, config, key, functionNames);
+
+        this.loadData.resourceManager = resourceManager;
+        this.loaded = false;
     }
 
     protected void inject(Class clazz, String method, String alias) {

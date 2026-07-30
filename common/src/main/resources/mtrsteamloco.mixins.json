@@ -44,7 +44,8 @@
     "TrainRendererBaseMixin",
     "TransCatenaryMixin",
     "VehicleRidingClientMixin",
-    "WidgetMapMixin"
+    "WidgetMapMixin",
+    "BveTrainSoundMixin"
   ],
   "injectors": {
     "defaultRequire": 1
